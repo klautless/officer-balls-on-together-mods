@@ -26,12 +26,9 @@
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/UnityEngine.CoreModule.dll" />
     <Content Include="patch.cs" />
     <Content Include="plugin.cs" />
-    <Content Include="patches/chatpatch.cs" />
-    <Content Include="patches/focusanywhere.cs" />
-    <Content Include="patches/mainscenemanagerpatch.cs" />
-    <Content Include="patches/playermovement.cs" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
   </ItemGroup>
+
 </Project>
