@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net46</TargetFramework>
+    <AssemblyName>PlayerLimitLift</AssemblyName>
+    <Version>1.0.0</Version>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>PlayerLimitLift</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/BepInEx/core/0Harmony.dll" />
+    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/BepInEx/core/BepInEx.dll" />
+    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/BepInEx/core/Mono.Cecil.dll" />
+    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/BepInEx/core/MonoMod.Utils.dll" />
+    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/Assembly-CSharp.dll" />
+    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/Assembly-CSharp-firstpass.dll" />
+    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/netstandard.dll" />
+    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/PurrNet.Runtime.dll" />
+    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/UnityEngine.dll" />
+    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/Unity.TextMeshPro.dll" />
+    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/UnityEngine.UI.dll" />
+    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/UnityEngine.InputModule.dll" />
+    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/UnityEngine.UIElementsModule.dll" />
+    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/UnityEngine.UIModule.dll" />
+    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/UnityEngine.CoreModule.dll" />
+    <Content Include="patch.cs" />
+    <Content Include="plugin.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
+  </ItemGroup>
+</Project>
