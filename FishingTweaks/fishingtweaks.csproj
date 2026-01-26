@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net46</TargetFramework>
-    <AssemblyName>FishingTweaks</AssemblyName>
+    <AssemblyName>officerballs.FishingTweaks</AssemblyName>
     <Version>1.0.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
@@ -32,3 +32,4 @@
   </ItemGroup>
 
 </Project>
+
