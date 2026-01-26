@@ -29,4 +29,9 @@ Hotkeys:
 4. Download any of the mods from releases and extract to the root directory (they should end up in /BepInEx/plugins.
 
 
-*Thunderstore installation should become available in the near future.*
+*Thunderstore installation should become available in the near future.*  
+
+  
+  
+if you wish to show support, you can buy me a donut on ko-fi. <3  
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/S6S519BLBL)
