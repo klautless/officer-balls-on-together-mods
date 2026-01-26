@@ -1,6 +1,8 @@
 # Mod Descriptions  
-**PlayerLimitLift** - Raises server player count up to 128.  
-! ! ! Known Bug: Around 30 players or so members may not properly have their messages send out to others. Exploring workarounds, would advise keeping cap LOW for now!  
+**PlayerLimitLift** - Raises server player count up to ~~128~~ 24. (nerfed to comply with backend networking limitations).  
+~~! ! ! Known Bug: Around 30 players or so members may not properly have their messages send out to others. Exploring workarounds, would advise keeping cap LOW for now!~~  
+  
+**FishingTweaks** - Enables you to fish on top of peoples heads, and gives a 1 minute timer to catch the fish so you have time to alt-tab back in.  
   
   
 # Installation  
