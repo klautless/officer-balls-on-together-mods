@@ -15,7 +15,7 @@ namespace PlayerLimitLift
     {
         public const string modGUID = "officerballs.PlayerLimitLift";
         public const string modName = "Player Limit Lift";
-        public const string modVersion = "1.0.0.0";
+        public const string modVersion = "1.0.1.0";
 
         private Harmony harmony = new Harmony(modGUID);
 
@@ -25,7 +25,7 @@ namespace PlayerLimitLift
 
         void Awake()
         {
-            mls.LogInfo("Player Limit Lifted");
+            mls.LogInfo("Player Limit Lifted to 24.");
             harmony.PatchAll(typeof(PlayerLimitPatch));
         }
 
