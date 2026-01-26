@@ -1,4 +1,4 @@
-using BepInEx;
+﻿using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
 using System;
@@ -15,7 +15,7 @@ namespace PlayerLimitLift
     {
         public const string modGUID = "officerballs.PlayerLimitLift";
         public const string modName = "Player Limit Lift";
-        public const string modVersion = "1.0.1.0";
+        public const string modVersion = "1.0.2.0";
 
         private Harmony harmony = new Harmony(modGUID);
 
@@ -27,6 +27,7 @@ namespace PlayerLimitLift
         {
             mls.LogInfo("Player Limit Lifted to 24.");
             harmony.PatchAll(typeof(PlayerLimitPatch));
+            harmony.PatchAll(typeof(ServerNameModder));
         }
 
     }
