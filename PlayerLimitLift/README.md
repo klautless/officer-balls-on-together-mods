@@ -1,4 +1,4 @@
-PlayerLimitLift - increase maximum server size to 128 players.  
+PlayerLimitLift - increase maximum server size to 24 players.  
   
 Manual Installation:  
 1. Install BepInEx as directed in the main repository instructions.  
