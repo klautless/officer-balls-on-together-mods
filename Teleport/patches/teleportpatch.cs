@@ -14,19 +14,24 @@ namespace Teleport.patches
         public static PlayerController target = null;
 
         [HarmonyPatch("Update")]
-        [HarmonyPrefix]
-        public static bool TelePatch()
+        [HarmonyPostfix]
+        public static void TelePatch()
         {
+            var test1 = AccessTools.FieldRefAccess<CustomizationUIController, GameObject>("_customizationPanel");
+            var instance1 = MonoSingleton<CustomizationUIController>.I;
+            if (test1(instance1).activeSelf) return;
+
+
             int tempdigit = 0;
             var fieldRef = AccessTools.FieldRefAccess<UIManager, TMP_InputField>("_messageInputField");
             var instance = MonoSingleton<UIManager>.I;
-            if (fieldRef(instance).isFocused) return true;
+            if (fieldRef(instance).isFocused) return;
             if(Input.GetKeyDown(KeyCode.E) && Input.GetKey(KeyCode.LeftShift))
             {
                 if( NetworkSingleton<PlayerPanelController>.I.PlayerIDs.Count == 1 )
                 {
                     //Debug.Log("can't teleport without other players!");
-                    return true;
+                    return;
                 }
                 index += 1;
                 tempdigit = 1;
@@ -37,7 +42,7 @@ namespace Teleport.patches
                 if( NetworkSingleton<PlayerPanelController>.I.PlayerIDs.Count == 1 )
                 {
                     //Debug.Log("can't teleport without other players!");
-                    return true;
+                    return;
                 }
                 index -= 1;
                 tempdigit = -1;
@@ -49,11 +54,11 @@ namespace Teleport.patches
                 if( NetworkSingleton<PlayerPanelController>.I.PlayerIDs.Count == 1 )
                 {
                     //Debug.Log("can't teleport without other players!");
-                    return true;
+                    return;
                 }
                 goto warp;
             }
-            return true;
+            return;
 
             changed:
                 for (var i = 0; i < 2; i++)
@@ -77,7 +82,7 @@ namespace Teleport.patches
                 var tname = target.PlayerNameText.text;
                 namefieldRef(nameinstance).text = playname + "            -            " + tname + " selected";
                 //Debug.Log(tname + " selected.");
-                return false;
+                return;
             warp:
                 if (target)
                 {
@@ -89,7 +94,7 @@ namespace Teleport.patches
                 }
                 //else Debug.Log("no valid target!");
 
-                return false;
+                return;
         }
 
         [HarmonyPatch("DespawnHandle")]
