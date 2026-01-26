@@ -29,8 +29,8 @@ namespace PlayerLimitLift.patches
         [HarmonyPostfix]
         public static void AwakePatch( ref TextMeshProUGUI ____filterPlayerText )
         {
-            MonoSingleton<MultiplayerManager>.I.FilterPlayerValue = 128;
-            ____filterPlayerText.text = "128";
+            MonoSingleton<MultiplayerManager>.I.FilterPlayerValue = 24;
+            ____filterPlayerText.text = "24";
 
         }
 
@@ -41,11 +41,11 @@ namespace PlayerLimitLift.patches
             var val = MonoSingleton<MultiplayerManager>.I.FilterPlayerValue;
             if (value == 1)
             {
-                val = (val - 1 + 1) % 128 + 1;
+                val = (val - 1 + 1) % 24 + 1;
             }
             else if (val == 1)
             {
-                val = 128;
+                val = 24;
             }
             else
             {
@@ -62,11 +62,11 @@ namespace PlayerLimitLift.patches
             var val = MonoSingleton<MultiplayerManager>.I.FilterListPlayerValue;
             if (value == 1)
             {
-                val = (val + 1) % 128;
+                val = (val + 1) % 24;
             }
             else if (val == 0)
             {
-                val = 128;
+                val = 24;
             }
             else
             {
