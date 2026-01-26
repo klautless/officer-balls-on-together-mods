@@ -1,9 +1,18 @@
 # Mod Descriptions  
-**PlayerLimitLift** - Raises server player count up to ~~128~~ 24. (nerfed to comply with backend networking limitations).  
-~~! ! ! Known Bug: Around 30 players or so members may not properly have their messages send out to others. Exploring workarounds, would advise keeping cap LOW for now!~~  
+
+***ChatTweaks***:  
+- adds a timestamp to chat
+- adds outline to the font
+- prevents the chat window from fading
+- messages now emit a blip noise (tone from the fishing rod equip)
+- players now emit a "has left the server" message
+- players now emit sounds when joining and leaving the server (fishing bird on join, frog on leaving)  
   
-**FishingTweaks** - Enables you to fish on top of peoples heads, and gives a 1 minute timer to catch the fish so you have time to alt-tab back in.  
+***FishingTweaks***- Changes the fishing catch timer to 60 seconds so you have time to alt+tab back in. Also lets you fish from people's heads and desks etc.  
   
+***PlayerLimitLift*** - increase maximum server size to 24 players.  
+  
+***Zoomies*** - simple mod that increases the maximum zoom distance.  
   
 # Installation  
 **Manual:**  
