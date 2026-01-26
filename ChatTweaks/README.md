@@ -1,4 +1,10 @@
-ChatTweaks - adds a timestamp to chat, an outline to the font, prevents the window from fading, and messages now emit a blip noise (from the fishing rod equip).  
+ChatTweaks:  
+- adds a timestamp to chat
+- adds outline to the font
+- prevents the chat window from fading
+- messages now emit a blip noise (tone from the fishing rod equip)
+- players now emit a "has left the server" message
+- players now emit sounds when joining and leaving the server (fishing bird on join, frog on leaving)
   
 Manual Installation:  
 1. Install BepInEx as directed on GitHub.  
