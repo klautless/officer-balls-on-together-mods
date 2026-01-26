@@ -11,6 +11,13 @@
 ***FishingTweaks***- Changes the fishing catch timer to 60 seconds so you have time to alt+tab back in. Also lets you fish from people's heads and desks etc.  
   
 ***PlayerLimitLift*** - increase maximum server size to 24 players.  
+
+***Teleport*** - Allows you to warp to other players in the server.  
+Hotkeys:  
+- Shift + Q / Shift + E -> rotate through players in the server.
+- Shift + X -> Teleport to selected player.
+
+* *Known issue: If a player is too far out of range teleportation will fail; haven't yet researched whether they are unloaded or if transform updates aren't reported outside of a given range.*  
   
 ***Zoomies*** - simple mod that increases the maximum zoom distance.  
   
