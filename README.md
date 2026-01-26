@@ -1,5 +1,6 @@
 # Mod Descriptions  
 **PlayerLimitLift** - Raises server player count up to 128.  
+! ! ! Known Bug: Around 30 players or so members may not properly have their messages send out to others. Exploring workarounds, would advise keeping cap LOW for now!  
   
   
 # Installation  
