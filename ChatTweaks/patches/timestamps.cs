@@ -19,7 +19,6 @@ namespace ChatTweaks.patches
         {
             TMP_Text tMP_Text = UnityProxy.Instantiate( ____textPrefab, isLocal ? MonoSingleton<UIManager>.I.TextContentLocalTransform : MonoSingleton<UIManager>.I.TextContentGlobalTransform);
             var stamp = DateTime.Now.ToString("h:mm tt");
-            Debug.Log(Plugin.configJoinLeaveNoises.Value);
             if (Plugin.configJoinLeaveNoises.Value)
             {
 		        MonoSingleton<SFXManager>.I.PlayRodAppear();
