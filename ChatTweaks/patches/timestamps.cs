@@ -1,6 +1,5 @@
 using HarmonyLib;
 using System;
-using System.Linq;
 using TMPro;
 using UnityEngine;
 
@@ -9,6 +8,7 @@ using System.Collections.Generic;
 
 namespace ChatTweaks.patches
 {
+    
     [HarmonyPatch(typeof(TextChannelManager))]
     
     public class TimeStampsPatch
@@ -19,8 +19,11 @@ namespace ChatTweaks.patches
         {
             TMP_Text tMP_Text = UnityProxy.Instantiate( ____textPrefab, isLocal ? MonoSingleton<UIManager>.I.TextContentLocalTransform : MonoSingleton<UIManager>.I.TextContentGlobalTransform);
             var stamp = DateTime.Now.ToString("h:mm tt");
-
-		    MonoSingleton<SFXManager>.I.PlayRodAppear();
+            Debug.Log(Plugin.configJoinLeaveNoises.Value);
+            if (Plugin.configJoinLeaveNoises.Value)
+            {
+		        MonoSingleton<SFXManager>.I.PlayRodAppear();
+            }
             tMP_Text.text = "[" + stamp + "] <color=#" + ScriptableSingleton<GameSettings>.I.MessageOthersColors[senderIndex] + "ff>" + userName + ":</color> " + text;
             if (isLocal)
             {
