@@ -10,7 +10,7 @@ namespace Teleport
     {
         public const string modGUID = "officerballs.Teleport";
         public const string modName = "Teleport";
-        public const string modVersion = "1.0.1.0";
+        public const string modVersion = "1.0.2.0";
 
         private Harmony harmony = new Harmony(modGUID);
 
