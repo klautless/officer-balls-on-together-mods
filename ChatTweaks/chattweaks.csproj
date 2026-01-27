@@ -1,9 +1,9 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net46</TargetFramework>
     <AssemblyName>officerballs.ChatTweaks</AssemblyName>
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <RootNamespace>ChatTweaks</RootNamespace>
@@ -20,18 +20,15 @@
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/PurrNet.Runtime.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/UnityEngine.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/Unity.TextMeshPro.dll" />
+    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/UnityEngine.AudioModule.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/UnityEngine.UI.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/UnityEngine.InputModule.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/UnityEngine.UIElementsModule.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/UnityEngine.UIModule.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/UnityEngine.CoreModule.dll" />
-    <Content Include="patch.cs" />
     <Content Include="plugin.cs" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
-    <Content Include="patches\fishingtweaks.cs" />
   </ItemGroup>
-
 </Project>
-
