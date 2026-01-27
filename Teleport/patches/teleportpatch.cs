@@ -21,6 +21,11 @@ namespace Teleport.patches
             var instance1 = MonoSingleton<CustomizationUIController>.I;
             if (test1(instance1).activeSelf) return;
 
+            var test2 = AccessTools.FieldRefAccess<PlayerPanelController, GameObject>("_reportPanel");
+            var instance2 = NetworkSingleton<PlayerPanelController>.I;
+            if (test2(instance2).activeSelf) return;
+
+            
 
             int tempdigit = 0;
             var fieldRef = AccessTools.FieldRefAccess<UIManager, TMP_InputField>("_messageInputField");
