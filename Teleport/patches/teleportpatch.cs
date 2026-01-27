@@ -14,7 +14,7 @@ namespace Teleport.patches
         public static PlayerController target = null;
 
         [HarmonyPatch("Update")]
-        [HarmonyPostfix]
+        [HarmonyPrefix]
         public static void TelePatch()
         {
             var test1 = AccessTools.FieldRefAccess<CustomizationUIController, GameObject>("_customizationPanel");
