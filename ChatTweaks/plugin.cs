@@ -2,11 +2,6 @@ using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ChatTweaks.patches;
 
 namespace ChatTweaks
@@ -18,7 +13,7 @@ namespace ChatTweaks
         public static ConfigEntry<bool> configJoinLeaveNoises  { get; private set; }
         public const string modGUID = "officerballs.chatTweaks";
         public const string modName = "Chat Tweaks";
-        public const string modVersion = "1.0.2.0";
+        public const string modVersion = "1.0.3.0";
 
         private Harmony harmony = new Harmony(modGUID);
 
