@@ -25,11 +25,11 @@ namespace PlayerLimitLift.patches
             var val = MonoSingleton<MultiplayerManager>.I.FilterPlayerValue;
             if (value == 1)
             {
-                val = (val - 1 + 1) % 128 + amount;
+                val = (val - 1 + amount) % 128 + 1;
             }
-            else if (val == 1)
+            else if (val-amount <= 0)
             {
-                val = 128;
+                val = 128-(amount-val);
             }
             else
             {
@@ -48,11 +48,11 @@ namespace PlayerLimitLift.patches
             var val = MonoSingleton<MultiplayerManager>.I.FilterListPlayerValue;
             if (value == 1)
             {
-                val = (val + amount) % 128;
+                val = (val + amount) % 129;
             }
-            else if (val == 0)
+            else if (val-amount < 0)
             {
-                val = 128;
+                val = 129 + val - amount;
             }
             else
             {
