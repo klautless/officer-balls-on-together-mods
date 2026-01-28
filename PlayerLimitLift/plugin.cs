@@ -1,4 +1,4 @@
-﻿using BepInEx;
+using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
 using System;
@@ -15,7 +15,7 @@ namespace PlayerLimitLift
     {
         public const string modGUID = "officerballs.PlayerLimitLift";
         public const string modName = "Player Limit Lift";
-        public const string modVersion = "1.0.3.0";
+        public const string modVersion = "1.0.4.0";
 
         private Harmony harmony = new Harmony(modGUID);
 
@@ -25,9 +25,13 @@ namespace PlayerLimitLift
 
         void Awake()
         {
-            mls.LogInfo("Player Limit Lifted to 24.");
+            mls.LogInfo("Player Limit Lifted to 128.");
             harmony.PatchAll(typeof(PlayerLimitPatch));
             harmony.PatchAll(typeof(ServerNameModder));
+            
+            // Credit to 岚风 雷 / Arashi_Lei (https://github.com/gqxastg) for sorting out the oversized lobby issues!
+
+            harmony.PatchAll(typeof(TextChannelManagerPatch));
         }
 
     }
