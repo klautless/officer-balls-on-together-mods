@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net46</TargetFramework>
     <AssemblyName>officerballs.PlayerLimitLift</AssemblyName>
-    <Version>1.0.4</Version>
+    <Version>1.0.5</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <RootNamespace>PlayerLimitLift</RootNamespace>
@@ -17,10 +17,12 @@
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/Assembly-CSharp-firstpass.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/netstandard.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/PurrNet.Runtime.dll" />
+    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/PurrNetLobbySetup.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/UnityEngine.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/Unity.TextMeshPro.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/UnityEngine.UI.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/UnityEngine.InputModule.dll" />
+    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/UnityEngine.InputLegacyModule.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/UnityEngine.UIElementsModule.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/UnityEngine.UIModule.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/On-Together_Data/Managed/UnityEngine.CoreModule.dll" />
