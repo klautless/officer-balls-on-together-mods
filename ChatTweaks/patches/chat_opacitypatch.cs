@@ -1,19 +1,9 @@
-using BepInEx;
-using BepInEx.Logging;
 using DG.Tweening;
 using HarmonyLib;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
-using UnityEngine.PlayerLoop;
-using UnityEngine.EventSystems;
-using UnityEngine.Rendering;
 using UnityEngine.UI;
-using System.Drawing.Printing;
 
 namespace ChatTweaks.patches
 {
@@ -51,6 +41,13 @@ namespace ChatTweaks.patches
         ref Image ____globalScrollImage, ref Image ____localScrollImage,
         UIManager __instance)
         {
+            var test1 = AccessTools.FieldRefAccess<CustomizationUIController, GameObject>("_customizationPanel");
+            var instance1 = MonoSingleton<CustomizationUIController>.I;
+            if (test1(instance1).activeSelf) return true;
+
+            var test2 = AccessTools.FieldRefAccess<PlayerPanelController, GameObject>("_reportPanel");
+            var instance2 = NetworkSingleton<PlayerPanelController>.I;
+            if (test2(instance2).activeSelf) return true;
             
             ____globalScrollImage.raycastTarget = true;
             ____localScrollImage.raycastTarget = true;
