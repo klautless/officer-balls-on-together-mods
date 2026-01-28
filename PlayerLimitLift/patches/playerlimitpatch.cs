@@ -1,23 +1,6 @@
-using BepInEx;
-using BepInEx.Logging;
-using DG.Tweening;
 using HarmonyLib;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TMPro;
 using UnityEngine;
-using UnityEngine.PlayerLoop;
-using UnityEngine.EventSystems;
-using UnityEngine.Rendering;
-using UnityEngine.UI;
-using System.Drawing.Printing;
-using System.Reflection;
-using JetBrains.Annotations;
-using System.Reflection.Emit;
-using MonoMod.Cil;
+using TMPro;
 
 namespace PlayerLimitLift.patches
 {
@@ -29,18 +12,20 @@ namespace PlayerLimitLift.patches
         [HarmonyPostfix]
         public static void AwakePatch( ref TextMeshProUGUI ____filterPlayerText )
         {
-            MonoSingleton<MultiplayerManager>.I.FilterPlayerValue = 128;
-            ____filterPlayerText.text = "128";
+            MonoSingleton<MultiplayerManager>.I.FilterPlayerValue = Plugin.configDefaultLobbySize.Value;
+            ____filterPlayerText.text = Plugin.configDefaultLobbySize.Value.ToString();
         }
 
         [HarmonyPatch("ButtonChangeFilterPlayer")]
         [HarmonyPrefix]
         public static bool Button1Patch( int value, MainMenuUIController __instance, ref TextMeshProUGUI ____filterPlayerText )
         {
+            var amount = ( Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift) ) 
+                            ? Plugin.configShiftSkipRate.Value : 1;
             var val = MonoSingleton<MultiplayerManager>.I.FilterPlayerValue;
             if (value == 1)
             {
-                val = (val - 1 + 1) % 128 + 1;
+                val = (val - 1 + 1) % 128 + amount;
             }
             else if (val == 1)
             {
@@ -48,7 +33,7 @@ namespace PlayerLimitLift.patches
             }
             else
             {
-                val--;
+                val-=amount;
             }
             MonoSingleton<MultiplayerManager>.I.FilterPlayerValue = val;
             ____filterPlayerText.text = val.ToString();
@@ -58,10 +43,12 @@ namespace PlayerLimitLift.patches
         [HarmonyPrefix]
         public static bool Button2Patch( int value, MainMenuUIController __instance, ref TextMeshProUGUI ____filterListPlayerText )
         {
+            var amount = ( Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift) ) 
+                            ? Plugin.configShiftSkipRate.Value : 1;
             var val = MonoSingleton<MultiplayerManager>.I.FilterListPlayerValue;
             if (value == 1)
             {
-                val = (val + 1) % 128;
+                val = (val + amount) % 128;
             }
             else if (val == 0)
             {
@@ -69,7 +56,7 @@ namespace PlayerLimitLift.patches
             }
             else
             {
-                val--;
+                val-=amount;
             }
             MonoSingleton<MultiplayerManager>.I.FilterListPlayerValue = val;
             ____filterListPlayerText.text = ((val == 0) ? MonoSingleton<SettingsController>.I.AllString.String : val.ToString());
