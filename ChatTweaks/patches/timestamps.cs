@@ -23,7 +23,8 @@ namespace ChatTweaks.patches
             {
 		        MonoSingleton<SFXManager>.I.PlayRodAppear();
             }
-            tMP_Text.text = "[" + stamp + "] <color=#" + ScriptableSingleton<GameSettings>.I.MessageOthersColors[senderIndex] + "ff>" + userName + ":</color> " + text;
+            string size = Plugin.configTextSize.Value.ToString();
+            tMP_Text.text = "<size=" + size + ">[" + stamp + "] <color=#" + ScriptableSingleton<GameSettings>.I.MessageOthersColors[senderIndex] + "ff>" + userName + ":</color> " + text;
             if (isLocal)
             {
                 ____messageObjectsLocal.Add(tMP_Text.gameObject);
