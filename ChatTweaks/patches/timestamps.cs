@@ -47,6 +47,14 @@ namespace ChatTweaks.patches
             }
             return false;
 
+
+        }
+        [HarmonyPatch("AddNotification")]
+        [HarmonyPrefix]
+        public static void NotifTextPatch( ref string text )
+        {
+            string size = Plugin.configTextSize.Value.ToString();
+            text = "<size=" + size + ">" + text;
         }
 
     }
