@@ -1,11 +1,6 @@
-﻿using BepInEx;
+using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FishingTweaks.patches;
 
 namespace FishingTweaks
@@ -15,7 +10,7 @@ namespace FishingTweaks
     {
         public const string modGUID = "officerballs.FishingTweaks";
         public const string modName = "Fishing Tweaks";
-        public const string modVersion = "1.0.0.0";
+        public const string modVersion = "1.0.1.0";
 
         private Harmony harmony = new Harmony(modGUID);
 
