@@ -9,6 +9,12 @@
 - players now emit sounds when joining and leaving the server (fishing bird on join, frog on leaving)  
   
 ***FishingTweaks***- Changes the fishing catch timer to 60 seconds so you have time to alt+tab back in. Also lets you fish from people's heads and desks etc.  
+
+***MoveTweaks:***  
+- Adds sprint and sneak keys (shift+control)  
+- Player can freely rotate + look at target with middle mouse button  
+- Makes bubblegum infinite in duration  
+- Bubblegum is no longer consumed when used.  
   
 ***PlayerLimitLift*** - increase maximum server size to 128 players.  
 *Fixes to the text channel manager provided by/adapted from 岚风 雷 / Arashi_Lei*  
