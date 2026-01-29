@@ -1,13 +1,5 @@
-using BepInEx;
-using BepInEx.Logging;
-using DG.Tweening;
+
 using HarmonyLib;
-using TMPro;
-using UnityEngine;
-using UnityEngine.PlayerLoop;
-using UnityEngine.EventSystems;
-using UnityEngine.Rendering;
-using UnityEngine.UI;
 
 namespace FishingTweaks.patches
 {
@@ -39,7 +31,12 @@ namespace FishingTweaks.patches
         [HarmonyPatch("IsReadyForFishing")]
         public static void Postfix(ref bool __result)
         {
-            __result = true;
+            var test1 = AccessTools.FieldRefAccess<MusicManager, MusicInstrumentController>("_currentInstrument");
+            var instance1 = NetworkSingleton<MusicManager>.I;
+            if (test1(instance1) == null)
+            {
+                __result = true;
+            }
         }
 
     }
