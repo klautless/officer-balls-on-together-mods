@@ -1,5 +1,8 @@
 MoveTweaks  
-Adds sprint and sneak keys (shift+control), makes bubblegum infinite in duration, bubblegum is no longer consumed when used.  
+- Adds sprint and sneak keys (shift+control)  
+- Player can freely rotate + look at target with middle mouse button  
+- Makes bubblegum infinite in duration  
+- Bubblegum is no longer consumed when used.  
   
 Manual Installation:  
 1. Install BepInEx as directed on GitHub.  
