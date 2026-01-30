@@ -207,7 +207,7 @@ namespace StatusMessage.patches
                         if(int.TryParse(text.Substring(10), out int brbnum))
                         {
                             Plugin.configBRBTimer.Value = brbnum;
-                            NetworkSingleton<TextChannelManager>.I.AddNotification("BRB timer changed to " + Plugin.configBRBTimer.Value.ToString() + ".");
+                            NetworkSingleton<TextChannelManager>.I.AddNotification("BRB timer changed to " + Plugin.configBRBTimer.Value.ToString() + " minutes.");
                         }
                         MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
                         EventSystem.current.SetSelectedGameObject(null);
@@ -217,7 +217,7 @@ namespace StatusMessage.patches
                         if(int.TryParse(text.Substring(10), out int afknum))
                         {
                             Plugin.configAFKTimer.Value = afknum;
-                            NetworkSingleton<TextChannelManager>.I.AddNotification("AFK timer changed to " + Plugin.configAFKTimer.Value.ToString() + ".");
+                            NetworkSingleton<TextChannelManager>.I.AddNotification("AFK timer changed to " + Plugin.configAFKTimer.Value.ToString() + " minutes.");
                         }
                         MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
                         EventSystem.current.SetSelectedGameObject(null);
