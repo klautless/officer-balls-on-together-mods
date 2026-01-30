@@ -26,7 +26,7 @@ namespace PlayerLimitLift
             mls.LogInfo("Player Limit Lifted to 128.");
             harmony.PatchAll(typeof(PanelPatch));
             harmony.PatchAll(typeof(PlayerLimitPatch));
-            harmony.PatchAll(typeof(ServerNameModder));
+            harmony.PatchAll(typeof(AddModdedTag));
             configDefaultLobbySize = Config.Bind("General", "DefaultLobbySize",16,"Lobby size shown on launch (takes effect after restart)");
             configShiftSkipRate = Config.Bind("General", "ShiftSkipRate",16,"Amount that shift+click changes lobby size by (takes effect after restart)");
             
