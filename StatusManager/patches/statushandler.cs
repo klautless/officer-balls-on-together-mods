@@ -89,24 +89,32 @@ namespace StatusMessage.patches
         public static bool TextChecker()
         {    
             string text = MonoSingleton<UIManager>.I.MessageInput.text;
-            if (text.Length >= 18) // /changebrackets @ 15
+            if (text.Length >= 15) // /changebrackets @ 15
             {
                 if (text.Substring(0,15) == "/changebrackets")
                 {
-                    Plugin.configBracketType.Value = text.Substring(16,2);
-                    if (statusmsg != "")
+                    if (text.Length >= 18)
                     {
-                        string namebase = Plugin.configNameBase.Value;
-                        string pre = Plugin.configBracketType.Value.Substring(0,1);
-                        string post = Plugin.configBracketType.Value.Substring(1);
-                        string color = Plugin.configCustomColor.Value;
-
-                        MonoSingleton<DataManager>.I.PlayerData.Name = namebase + " <color=#" + color + ">" + pre + statusmsg + post + "</color>";
-                        if (MonoSingleton<MainSceneManager>.I != null)
+                        Plugin.configBracketType.Value = text.Substring(16,2);
+                        if (statusmsg != "")
                         {
-                            NetworkSingleton<TextChannelManager>.I.MainCustomizationController.UpdatePlayerInfo(MonoSingleton<DataManager>.I.PlayerData.GetPlayerIdInfo());
-                            string text3 = (MonoSingleton<UIManager>.I.PlayerText.text = (NetworkSingleton<TextChannelManager>.I.UserName = MonoSingleton<DataManager>.I.PlayerData.Name));
+                            string namebase = Plugin.configNameBase.Value;
+                            string pre = Plugin.configBracketType.Value.Substring(0,1);
+                            string post = Plugin.configBracketType.Value.Substring(1);
+                            string color = Plugin.configCustomColor.Value;
+
+                            MonoSingleton<DataManager>.I.PlayerData.Name = namebase + " <color=#" + color + ">" + pre + statusmsg + post + "</color>";
+                            if (MonoSingleton<MainSceneManager>.I != null)
+                            {
+                                NetworkSingleton<TextChannelManager>.I.MainCustomizationController.UpdatePlayerInfo(MonoSingleton<DataManager>.I.PlayerData.GetPlayerIdInfo());
+                                string text3 = (MonoSingleton<UIManager>.I.PlayerText.text = (NetworkSingleton<TextChannelManager>.I.UserName = MonoSingleton<DataManager>.I.PlayerData.Name));
+                            }
                         }
+                        NetworkSingleton<TextChannelManager>.I.AddNotification("Brackets changed to " + Plugin.configBracketType.Value);
+                    }
+                    else
+                    {
+                        NetworkSingleton<TextChannelManager>.I.AddNotification("Brackets currently set to " + Plugin.configBracketType.Value);
                     }
 
                     MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
@@ -114,7 +122,6 @@ namespace StatusMessage.patches
                     
                     MonoSingleton<UIManager>.I.MessageInput.text = "";
 
-                    NetworkSingleton<TextChannelManager>.I.AddNotification("Brackets changed to " + Plugin.configBracketType.Value);
                     return false;
 
                     
@@ -158,35 +165,53 @@ namespace StatusMessage.patches
                                     NetworkSingleton<TextChannelManager>.I.MainCustomizationController.UpdatePlayerInfo(MonoSingleton<DataManager>.I.PlayerData.GetPlayerIdInfo());
                                     string text3 = (MonoSingleton<UIManager>.I.PlayerText.text = (NetworkSingleton<TextChannelManager>.I.UserName = MonoSingleton<DataManager>.I.PlayerData.Name));
                                 }
+                                NetworkSingleton<TextChannelManager>.I.AddNotification("Status color changed to <color=#" + Plugin.configCustomColor.Value + ">" + Plugin.configCustomColor.Value + "</color>.");
                             }
                             
+                        }
+                        else
+                        {
+                            NetworkSingleton<TextChannelManager>.I.AddNotification("Status color currently set to <color=#" + Plugin.configCustomColor.Value + ">" + Plugin.configCustomColor.Value + "</color>.");  
                         }
                         MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
 		                EventSystem.current.SetSelectedGameObject(null);
 		
                         MonoSingleton<UIManager>.I.MessageInput.text = "";
-                        NetworkSingleton<TextChannelManager>.I.AddNotification("Status color changed to <color=#" + Plugin.configCustomColor.Value + ">" + Plugin.configCustomColor.Value + "</color>.");
                     
                         return false;
 
                 }
             }
-            if (text.Length >= 16) // /brbcolor /afkcolor
+            if (text.Length >= 9) // /brbcolor /afkcolor
             {
                 string commandcheck = text.Substring(0,9);
                 string color = "";
                 switch (commandcheck)
                 {
                     case "/brbcolor":
+                    if (text.Length >= 16)
+                    {
                         color = text.Substring(10,6);
                         Plugin.configBRBColor.Value = color;
 
                         MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-		                EventSystem.current.SetSelectedGameObject(null);
+                        EventSystem.current.SetSelectedGameObject(null);
                         MonoSingleton<UIManager>.I.MessageInput.text = "";
                         NetworkSingleton<TextChannelManager>.I.AddNotification("BRB color changed to <color=#" + Plugin.configBRBColor.Value + ">" + Plugin.configBRBColor.Value + "</color>.");
                         return false;
+                    }
+                    else
+                    {
+                        MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
+                        EventSystem.current.SetSelectedGameObject(null);
+                        MonoSingleton<UIManager>.I.MessageInput.text = "";
+                        NetworkSingleton<TextChannelManager>.I.AddNotification("BRB color currently set to <color=#" + Plugin.configBRBColor.Value + ">" + Plugin.configBRBColor.Value + "</color>.");
+                        return false;
+                    }
+
                     case "/afkcolor":
+                    if (text.Length >= 16)
+                    {
                         color = text.Substring(10,6);
                         Plugin.configAFKColor.Value = color;
 
@@ -195,62 +220,95 @@ namespace StatusMessage.patches
                         MonoSingleton<UIManager>.I.MessageInput.text = "";
                         NetworkSingleton<TextChannelManager>.I.AddNotification("AFK color changed to <color=#" + Plugin.configAFKColor.Value + ">" + Plugin.configAFKColor.Value + "</color>.");
                         return false;
+                    }
+                    else
+                    {
+                        MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
+		                EventSystem.current.SetSelectedGameObject(null);
+                        MonoSingleton<UIManager>.I.MessageInput.text = "";
+                        NetworkSingleton<TextChannelManager>.I.AddNotification("AFK color currently set to <color=#" + Plugin.configAFKColor.Value + ">" + Plugin.configAFKColor.Value + "</color>.");
+                        return false;
+                    }
                         
                 }
             }
-            if (text.Length > 9) // /afktimer, /brbtimer
+            if (text.Length >= 9) // /afktimer, /brbtimer
             {
                 string commandcheck = text.Substring(0,9);
                 switch (commandcheck)
                 {
                     case "/brbtimer":
+                    if(text.Length>10)
+                    {
                         if(int.TryParse(text.Substring(10), out int brbnum))
                         {
                             Plugin.configBRBTimer.Value = brbnum;
                             NetworkSingleton<TextChannelManager>.I.AddNotification("BRB timer changed to " + Plugin.configBRBTimer.Value.ToString() + " minutes.");
                         }
-                        MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                        EventSystem.current.SetSelectedGameObject(null);
-                        MonoSingleton<UIManager>.I.MessageInput.text = "";
-                        return false;
+                    }
+                    else
+                    {
+                        NetworkSingleton<TextChannelManager>.I.AddNotification("BRB timer currently set to " + Plugin.configBRBTimer.Value.ToString() + " minutes.");
+                    }
+                    MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
+                    EventSystem.current.SetSelectedGameObject(null);
+                    MonoSingleton<UIManager>.I.MessageInput.text = "";
+                    return false;
+
                     case "/afktimer":
+                    if(text.Length>10)
+                    {
                         if(int.TryParse(text.Substring(10), out int afknum))
                         {
                             Plugin.configAFKTimer.Value = afknum;
                             NetworkSingleton<TextChannelManager>.I.AddNotification("AFK timer changed to " + Plugin.configAFKTimer.Value.ToString() + " minutes.");
                         }
-                        MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                        EventSystem.current.SetSelectedGameObject(null);
-                        MonoSingleton<UIManager>.I.MessageInput.text = "";
-                        return false;
-                }
-            }
-            if (text.Length > 8) // /setname
-            {
-                if (text.Substring(0,8) == "/setname")
-                {
-                    string newname = text.Substring(9);
-                    Plugin.configNameBase.Value = newname;
-                    MonoSingleton<DataManager>.I.PlayerData.Name = newname;
-                    if (MonoSingleton<MainSceneManager>.I != null)
-                    {
-                        NetworkSingleton<TextChannelManager>.I.MainCustomizationController.UpdatePlayerInfo(MonoSingleton<DataManager>.I.PlayerData.GetPlayerIdInfo());
-                        string text3 = (MonoSingleton<UIManager>.I.PlayerText.text = (NetworkSingleton<TextChannelManager>.I.UserName = MonoSingleton<DataManager>.I.PlayerData.Name));
                     }
-
+                    else
+                    {
+                        NetworkSingleton<TextChannelManager>.I.AddNotification("AFK timer currently set to " + Plugin.configAFKTimer.Value.ToString() + " minutes.");
+                    }
                     MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
                     EventSystem.current.SetSelectedGameObject(null);
-		            MonoSingleton<UIManager>.I.MessageInput.text = "";
-                    NetworkSingleton<TextChannelManager>.I.AddNotification("Name changed to " + Plugin.configNameBase.Value + ".");
+                    MonoSingleton<UIManager>.I.MessageInput.text = "";
                     return false;
                 }
             }
-            if (text.Length > 7) // /status, /afkmsg, /brbmsg
+            if (text.Length >= 8) // /setname
+            {
+                if (text.Substring(0,8) == "/setname")
+                {
+                    if (text.Length > 8)
+                    {
+                        string newname = text.Substring(9);
+                        Plugin.configNameBase.Value = newname;
+                        MonoSingleton<DataManager>.I.PlayerData.Name = newname;
+                        if (MonoSingleton<MainSceneManager>.I != null)
+                        {
+                            NetworkSingleton<TextChannelManager>.I.MainCustomizationController.UpdatePlayerInfo(MonoSingleton<DataManager>.I.PlayerData.GetPlayerIdInfo());
+                            string text3 = (MonoSingleton<UIManager>.I.PlayerText.text = (NetworkSingleton<TextChannelManager>.I.UserName = MonoSingleton<DataManager>.I.PlayerData.Name));
+                        }
+                        NetworkSingleton<TextChannelManager>.I.AddNotification("Name changed to " + Plugin.configNameBase.Value + ".");
+                    
+                    }
+                    else
+                    {
+                        NetworkSingleton<TextChannelManager>.I.AddNotification("Name currently registered as " + Plugin.configNameBase.Value + ".");
+                    }
+                    MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
+                    EventSystem.current.SetSelectedGameObject(null);
+                    MonoSingleton<UIManager>.I.MessageInput.text = "";
+                    return false;
+                }
+            }
+            if (text.Length >= 7) // /status, /afkmsg, /brbmsg
             {
                 string commandcheck = text.Substring(0,7);
                 switch (commandcheck)
                 {
                     case "/brbmsg":
+                    if (text.Length > 8)
+                    {
                         Plugin.configBRBMessage.Value = text.Substring(8);
 
                         MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
@@ -258,15 +316,41 @@ namespace StatusMessage.patches
                         MonoSingleton<UIManager>.I.MessageInput.text = "";
                         NetworkSingleton<TextChannelManager>.I.AddNotification("BRB message changed to " + Plugin.configBRBMessage.Value + ".");
                         return false;
+                        
+                    }
+                    else
+                    {
+                        MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
+                        EventSystem.current.SetSelectedGameObject(null);
+                        MonoSingleton<UIManager>.I.MessageInput.text = "";
+                        NetworkSingleton<TextChannelManager>.I.AddNotification("BRB message currently set to " + Plugin.configBRBMessage.Value + ".");
+                        
+                        return false;
+                    }
+
                     case "/afkmsg":
+                    if (text.Length > 8)
+                    {
                         Plugin.configAFKMessage.Value = text.Substring(8);
 
                         MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
                         EventSystem.current.SetSelectedGameObject(null);
                         MonoSingleton<UIManager>.I.MessageInput.text = "";
                         NetworkSingleton<TextChannelManager>.I.AddNotification("AFK message changed to " + Plugin.configAFKMessage.Value + ".");
+                        return false;   
+                    }
+                    else
+                    {
+                        MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
+                        EventSystem.current.SetSelectedGameObject(null);
+                        MonoSingleton<UIManager>.I.MessageInput.text = "";
+                        NetworkSingleton<TextChannelManager>.I.AddNotification("AFK message currently set to " + Plugin.configAFKMessage.Value + ".");
                         return false;
+                    }
+
                     case "/status":
+                    if (text.Length > 8)
+                    {
                         statusmsg = text.Substring(8);
                         string namebase = Plugin.configNameBase.Value;
                         string pre = Plugin.configBracketType.Value.Substring(0,1);
@@ -285,29 +369,49 @@ namespace StatusMessage.patches
                         MonoSingleton<UIManager>.I.MessageInput.text = "";
                         NetworkSingleton<TextChannelManager>.I.AddNotification("Status changed to " + statusmsg + ".");
                         return false;
+                    }
+                    else
+                    {
+                        statusmsg = "";
+                        MonoSingleton<DataManager>.I.PlayerData.Name = Plugin.configNameBase.Value;
+                        if (MonoSingleton<MainSceneManager>.I != null)
+                        {
+                            NetworkSingleton<TextChannelManager>.I.MainCustomizationController.UpdatePlayerInfo(MonoSingleton<DataManager>.I.PlayerData.GetPlayerIdInfo());
+                            string text3 = (MonoSingleton<UIManager>.I.PlayerText.text = (NetworkSingleton<TextChannelManager>.I.UserName = MonoSingleton<DataManager>.I.PlayerData.Name));
+                        }
+
+                        MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
+                        EventSystem.current.SetSelectedGameObject(null);
+                        
+                        MonoSingleton<UIManager>.I.MessageInput.text = "";
+                        NetworkSingleton<TextChannelManager>.I.AddNotification("Status message cleared.");
+                    
+                        return false;
+                    }
                 }
             }
             if(text.Length == 7) // /useafk, /usebrb
                 switch(text)
                 {
                     case "/useafk":
-                        Plugin.configUseAFK.Value = !Plugin.configUseAFK.Value;
-                        string a_onoff = Plugin.configUseAFK.Value ? "on" : "off";
+                    Plugin.configUseAFK.Value = !Plugin.configUseAFK.Value;
+                    string a_onoff = Plugin.configUseAFK.Value ? "on" : "off";
 
-                        MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                        EventSystem.current.SetSelectedGameObject(null);
-                        MonoSingleton<UIManager>.I.MessageInput.text = "";
-                        NetworkSingleton<TextChannelManager>.I.AddNotification("AFK system turned " + a_onoff + ".");
-                        return false;
+                    MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
+                    EventSystem.current.SetSelectedGameObject(null);
+                    MonoSingleton<UIManager>.I.MessageInput.text = "";
+                    NetworkSingleton<TextChannelManager>.I.AddNotification("AFK system turned " + a_onoff + ".");
+                    return false;
+
                     case "/usebrb":
-                        Plugin.configUseBRB.Value = !Plugin.configUseBRB.Value;
-                        string b_onoff = Plugin.configUseBRB.Value ? "on" : "off";
+                    Plugin.configUseBRB.Value = !Plugin.configUseBRB.Value;
+                    string b_onoff = Plugin.configUseBRB.Value ? "on" : "off";
 
-                        MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                        EventSystem.current.SetSelectedGameObject(null);
-                        MonoSingleton<UIManager>.I.MessageInput.text = "";
-                        NetworkSingleton<TextChannelManager>.I.AddNotification("BRB system turned " + b_onoff + ".");
-                        return false;
+                    MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
+                    EventSystem.current.SetSelectedGameObject(null);
+                    MonoSingleton<UIManager>.I.MessageInput.text = "";
+                    NetworkSingleton<TextChannelManager>.I.AddNotification("BRB system turned " + b_onoff + ".");
+                    return false;
 
                 }
             if(text.Length == 5) // /help
