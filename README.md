@@ -19,6 +19,12 @@
 ***PlayerLimitLift*** - increase maximum server size to 128 players.  
 *Fixes to the text channel manager provided by/adapted from 岚风 雷 / Arashi_Lei*  
 
+***Status Manager***  
+adds an auto-brb + auto-afk system, custom status messages, lots of flexibility!  
+  
+check commands in game with /help any time.  
+full readme in directory!  
+
 ***Teleport*** - Allows you to warp to other players in the server.  
 Hotkeys:  
 - Shift + Q / Shift + E -> rotate through players in the server.
