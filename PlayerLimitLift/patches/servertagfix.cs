@@ -1,29 +1,25 @@
 
 using HarmonyLib;
-using System;
-using System.Linq;
-using TMPro;
-using UnityEngine;
-
-using PurrNet;
 using System.Collections.Generic;
 
 namespace PlayerLimitLift.patches
 {
     [HarmonyPatch(typeof(MultiplayerManager))]
     
-    public class ServerNameModder
+    public class AddModdedTag
     {
         [HarmonyPatch("CreateLobby")]
         [HarmonyPrefix]
-        public static void NameChanger()
+        public static void NameChanger( ref List<bool> ___FilterSocialTags )
         {
             //Debug.Log("branch reached");
             var val = MonoSingleton<MultiplayerManager>.I.FilterPlayerValue;
             var text = MonoSingleton<MainMenuUIController>.I.CreateSessionNameInputField.text;
             if (val > 16)
             {
-                MonoSingleton<MainMenuUIController>.I.CreateSessionNameInputField.text = "[MODDED] " + text;
+                ___FilterSocialTags[4] = true;
+
+                //MonoSingleton<MainMenuUIController>.I.CreateSessionNameInputField.text = "[MODDED] " + text;
             }
 
         }
