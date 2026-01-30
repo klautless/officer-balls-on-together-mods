@@ -6,7 +6,7 @@ namespace ChatTweaks.patches
     [HarmonyPatch(typeof(PlayerCustomizationController))]
     internal class joinSoundPatch
     {
-        [HarmonyPatch("NotifyOtherClients_Original_5")]
+        [HarmonyPatch("NotifyOtherClients_Original_6")]
         [HarmonyPrefix]
         public static void joinSoundPatcher()
         {
