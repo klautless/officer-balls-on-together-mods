@@ -1,4 +1,4 @@
-﻿using BepInEx;
+using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
@@ -27,7 +27,7 @@ namespace StatusMessage
 
         public const string modGUID = "officerballs.StatusManager";
         public const string modName = "Status Manager";
-        public const string modVersion = "1.0.0.0";
+        public const string modVersion = "1.0.1.0";
 
         private Harmony harmony = new Harmony(modGUID);
 
