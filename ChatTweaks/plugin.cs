@@ -14,7 +14,7 @@ namespace ChatTweaks
         public static ConfigEntry<bool> configJoinLeaveNoises  { get; private set; }
         public const string modGUID = "officerballs.chatTweaks";
         public const string modName = "Chat Tweaks";
-        public const string modVersion = "1.0.4.0";
+        public const string modVersion = "1.0.5.0";
 
         private Harmony harmony = new Harmony(modGUID);
 
@@ -36,3 +36,4 @@ namespace ChatTweaks
 
     }
 }
+
