@@ -13,7 +13,7 @@ namespace PlayerLimitLift
         public static ConfigEntry<int> configShiftSkipRate      { get; private set; }
         public const string modGUID = "officerballs.PlayerLimitLift";
         public const string modName = "Player Limit Lift";
-        public const string modVersion = "1.0.6.0";
+        public const string modVersion = "1.0.7.0";
 
         private Harmony harmony = new Harmony(modGUID);
 
