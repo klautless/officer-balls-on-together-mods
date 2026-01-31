@@ -11,24 +11,19 @@ namespace ChatTweaks.patches
     internal class UIManagerPatch
     {
         //internal ManualLogSource mls;
+        [HarmonyPatch("Awake")]
+        [HarmonyPostfix]
+        public static void awakePatch()
+        {
+            TextPatcher.outlineChanger();    
+        }
+        
         [HarmonyPatch("Update")]
         //[HarmonyPatch("Update")]
         [HarmonyPostfix]
         public static void patchReset(ref float ____messageTimer)
         {
             ____messageTimer = 0f;
-        }
-        [HarmonyPatch("Awake")]
-        [HarmonyPostfix]
-        public static void outlineChanger( ref TextMeshProUGUI ____messageTextForFont)
-        {
-            Material mat = ____messageTextForFont.fontSharedMaterial;
-
-            mat.EnableKeyword("OUTLINE_ON");
-            mat.SetFloat("_OutlineWidth", 0.25f);
-            mat.SetColor("_OutlineColor", new Color32(20, 20, 20, 205));
-            ____messageTextForFont.UpdateMeshPadding();
-            
         }
         [HarmonyPatch("SetMessagePanelActiveness")]
         [HarmonyPrefix]
