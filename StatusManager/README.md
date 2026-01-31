@@ -4,7 +4,7 @@ adds an auto-brb + auto-afk system, custom status messages, lots of flexibility!
 check commands in game with /help any time.  
   
 ## Available commands  
-/help - gives a summarized version of this list.  
+/help status - gives a summarized version of this list.  
 /setname - update your playername with this.  
 /status - sets your status message!  
 /clearstatus - removes your status message!  
