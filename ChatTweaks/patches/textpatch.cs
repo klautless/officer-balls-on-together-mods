@@ -67,9 +67,8 @@ namespace ChatTweaks.patches
             {
                 MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
                 EventSystem.current.SetSelectedGameObject(null);
-                MonoSingleton<UIManager>.I.MessageInput.text = "";
                 NetworkSingleton<TextChannelManager>.I.AddNotification("/help chat for ChatTweaks commands");
-                return false;
+                return true;
             }
             if (text.ToLower() == "/help chat" || text.ToLower() == "/help chattweaks")
             {
@@ -257,6 +256,20 @@ namespace ChatTweaks.patches
                     MonoSingleton<UIManager>.I.MessageInput.text = "";
                     return false;
                 }
+            }
+            return true;
+        }
+
+        [HarmonyPatch("OnEnterPressed")]
+        [HarmonyPriority(300)]
+        [HarmonyPrefix]
+        public static bool HelpCloser()
+        {
+            string text = MonoSingleton<UIManager>.I.MessageInput.text;
+            if(text == "/help")
+            {
+                MonoSingleton<UIManager>.I.MessageInput.text = "";
+                return false;
             }
             return true;
         }
