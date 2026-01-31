@@ -6,7 +6,9 @@
 - prevents the chat window from fading
 - messages now emit a blip noise (tone from the fishing rod equip)
 - players now emit a "has left the server" message
-- players now emit sounds when joining and leaving the server (fishing bird on join, frog on leaving)  
+- players now emit sounds when joining and leaving the server (fishing bird on join, frog on leaving)
+  
+Use /help chat in game for customization options.  
   
 ***FishingTweaks***- Changes the fishing catch timer to 60 seconds so you have time to alt+tab back in. Also lets you fish from people's heads and desks etc.  
 
@@ -22,7 +24,7 @@
 ***Status Manager***  
 adds an auto-brb + auto-afk system, custom status messages, lots of flexibility!  
   
-check commands in game with /help any time.  
+check commands in game with /help status any time.  
 full readme in directory!  
 
 ***Teleport*** - Allows you to warp to other players in the server.  
