@@ -27,7 +27,7 @@ namespace StatusMessage
 
         public const string modGUID = "officerballs.StatusManager";
         public const string modName = "Status Manager";
-        public const string modVersion = "1.0.1.0";
+        public const string modVersion = "1.0.2.0";
 
         private Harmony harmony = new Harmony(modGUID);
 
@@ -69,3 +69,4 @@ namespace StatusMessage
 
     }
 }
+
