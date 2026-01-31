@@ -1,3 +1,4 @@
+using System.Text;
 using HarmonyLib;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -446,15 +447,13 @@ namespace StatusMessage.patches
             return true;
         }
 
-        [HarmonyPatch("OnEnterPressed")]
-        [HarmonyPriority(300)]
+        [HarmonyPatch("SendMessageAsync")]
         [HarmonyPrefix]
-        public static bool HelpCloser()
+        public static bool HelpCloser(byte[] textBytes)
         {
-            string text = MonoSingleton<UIManager>.I.MessageInput.text;
+            string text = Encoding.Unicode.GetString(textBytes);
             if(text == "/help")
             {
-                MonoSingleton<UIManager>.I.MessageInput.text = "";
                 return false;
             }
             return true;
