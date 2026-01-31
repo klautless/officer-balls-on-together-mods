@@ -6,6 +6,8 @@ using UnityEngine.EventSystems;
 
 using PurrNet;
 using System.Collections.Generic;
+using System.Text;
+using UnityEngine.UI;
 
 namespace ChatTweaks.patches
 {
@@ -260,15 +262,13 @@ namespace ChatTweaks.patches
             return true;
         }
 
-        [HarmonyPatch("OnEnterPressed")]
-        [HarmonyPriority(300)]
+        [HarmonyPatch("SendMessageAsync")]
         [HarmonyPrefix]
-        public static bool HelpCloser()
+        public static bool HelpCloser(byte[] textBytes)
         {
-            string text = MonoSingleton<UIManager>.I.MessageInput.text;
+            string text = Encoding.Unicode.GetString(textBytes);
             if(text == "/help")
             {
-                MonoSingleton<UIManager>.I.MessageInput.text = "";
                 return false;
             }
             return true;
