@@ -1,4 +1,4 @@
-ChatTweaks:  
+# ChatTweaks:  
 - adds a timestamp to chat
 - adds outline to the font
 - prevents the chat window from fading
@@ -6,8 +6,20 @@ ChatTweaks:
 - players now emit a "has left the server" message
 - players now emit sounds when joining and leaving the server (fishing bird on join, frog on leaving)
   
-you can edit the config generated in BepInEx/config to disable the noises if desired.  
+# Commands  
   
-Manual Installation:  
-1. Install BepInEx as directed on GitHub.  
+- /help chat, /help chattweaks - brings up a list of commands in game.  
+- /textsize x - lets you wrap the entire chat with a size. game default: 48.  
+- /textcolor 123456 - lets you wrap the entire chat with a color. default: ffffff.  
+- /systemcolor 123456 - lets you wrap join/leave messages with a color. default: d5d6db.  
+- /outlinecolor 123456 - the color for font outline. default: 141414.  
+- /outlinewidth x.xx - outline width. default: 0.25  
+- /outlineopacity x - outline opacity ranging 0-255. default: 205.  
+- /usetimestamps - enable/disable the timestamping system. default: on.  
+- /mutetext - enable/disable the chat message noises. default: on.  
+- /mutejoinleave - enable/disable the join/leave noises. default: on.  
+
+# Manual Installation:  
+1. Install BepInEx as directed on GitHub/Thunderstore.  
 2. Extract archive to your game's installation, making sure to overwrite/merge the folders as prompted.
+
