@@ -63,6 +63,14 @@ namespace ChatTweaks.patches
         public static bool TextChecker()
         {    
             string text = MonoSingleton<UIManager>.I.MessageInput.text;
+            if (text == "/help")
+            {
+                MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
+                EventSystem.current.SetSelectedGameObject(null);
+                MonoSingleton<UIManager>.I.MessageInput.text = "";
+                NetworkSingleton<TextChannelManager>.I.AddNotification("/help chat for ChatTweaks commands");
+                return false;
+            }
             if (text.ToLower() == "/help chat" || text.ToLower() == "/help chattweaks")
             {
                 NetworkSingleton<TextChannelManager>.I.AddNotification("Available commands:");
