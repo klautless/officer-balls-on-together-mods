@@ -89,6 +89,13 @@ namespace StatusMessage.patches
         public static bool TextChecker()
         {    
             string text = MonoSingleton<UIManager>.I.MessageInput.text;
+            if (text == "/help")
+            {
+                MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
+                EventSystem.current.SetSelectedGameObject(null);
+                NetworkSingleton<TextChannelManager>.I.AddNotification("/help status for StatusManager commands");
+                return true;
+            }
             if (text.Length >= 15) // /changebrackets @ 15
             {
                 if (text.Substring(0,15) == "/changebrackets")
@@ -391,6 +398,7 @@ namespace StatusMessage.patches
                 }
             }
             if(text.Length == 7) // /useafk, /usebrb
+            {
                 switch(text)
                 {
                     case "/useafk":
@@ -412,32 +420,43 @@ namespace StatusMessage.patches
                     MonoSingleton<UIManager>.I.MessageInput.text = "";
                     NetworkSingleton<TextChannelManager>.I.AddNotification("BRB system turned " + b_onoff + ".");
                     return false;
-
-                }
-            if(text.Length == 5) // /help
-            {
-                if (text == "/help")
-                {
-                    NetworkSingleton<TextChannelManager>.I.AddNotification("Available commands:");
-                    NetworkSingleton<TextChannelManager>.I.AddNotification("/setname <color=#4394b0>name</color>");
-                    NetworkSingleton<TextChannelManager>.I.AddNotification("/status <color=#4394b0>anything</color>");
-                    NetworkSingleton<TextChannelManager>.I.AddNotification("/statuscolor <color=#9db143>123456</color>");
-                    NetworkSingleton<TextChannelManager>.I.AddNotification("/clearstatus");
-                    NetworkSingleton<TextChannelManager>.I.AddNotification("/changebrackets <color=#4394b0>()</color>");
-                    NetworkSingleton<TextChannelManager>.I.AddNotification("/useafk, /usebrb (same syntax applies for all below)");
-                    NetworkSingleton<TextChannelManager>.I.AddNotification("/afkmsg <color=#4394b0>AFK</color>");
-                    NetworkSingleton<TextChannelManager>.I.AddNotification("/afktimer <color=#a83131>x</color> (in minutes)");
-                    NetworkSingleton<TextChannelManager>.I.AddNotification("/afkcolor <color=#9db143>123456</color>");
-
-                    MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                    EventSystem.current.SetSelectedGameObject(null);
-                    MonoSingleton<UIManager>.I.MessageInput.text = "";
-                   return false;
-                        
-                    
                 }
             }
+            if (text.ToLower() == "/help statusmanager" || text.ToLower() == "/help status")
+            {
+                NetworkSingleton<TextChannelManager>.I.AddNotification("Available commands:");
+                NetworkSingleton<TextChannelManager>.I.AddNotification("/setname <color=#4394b0>name</color>");
+                NetworkSingleton<TextChannelManager>.I.AddNotification("/status <color=#4394b0>anything</color>");
+                NetworkSingleton<TextChannelManager>.I.AddNotification("/statuscolor <color=#9db143>123456</color>");
+                NetworkSingleton<TextChannelManager>.I.AddNotification("/clearstatus");
+                NetworkSingleton<TextChannelManager>.I.AddNotification("/changebrackets <color=#4394b0>()</color>");
+                NetworkSingleton<TextChannelManager>.I.AddNotification("/useafk, /usebrb (same syntax applies for all below)");
+                NetworkSingleton<TextChannelManager>.I.AddNotification("/afkmsg <color=#4394b0>AFK</color>");
+                NetworkSingleton<TextChannelManager>.I.AddNotification("/afktimer <color=#a83131>x</color> (in minutes)");
+                NetworkSingleton<TextChannelManager>.I.AddNotification("/afkcolor <color=#9db143>123456</color>");
 
+                MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
+                EventSystem.current.SetSelectedGameObject(null);
+                MonoSingleton<UIManager>.I.MessageInput.text = "";
+                return false;
+                        
+                   
+            }
+
+            return true;
+        }
+
+        [HarmonyPatch("OnEnterPressed")]
+        [HarmonyPriority(300)]
+        [HarmonyPrefix]
+        public static bool HelpCloser()
+        {
+            string text = MonoSingleton<UIManager>.I.MessageInput.text;
+            if(text == "/help")
+            {
+                MonoSingleton<UIManager>.I.MessageInput.text = "";
+                return false;
+            }
             return true;
         }
     }
