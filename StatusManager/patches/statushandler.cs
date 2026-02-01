@@ -1,15 +1,22 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using HarmonyLib;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using TMPro;
+using PurrLobby;
 
 namespace StatusMessage.patches
 {
     [HarmonyPatch(typeof(TextChannelManager))]
-    internal class StatusPatch
+    public static class StatusPatch
     {
+        public static string _ifTeleportString = "";
         public static string statusmsg = "";
         public static float awaytimer = 0f;
+        public static float nameTimer = 0f;
         public static bool isAFK = false;
         public static bool isBRB = false;
 
@@ -17,6 +24,7 @@ namespace StatusMessage.patches
         [HarmonyPrefix]
         public static void TimeChecker()
         {
+
             if (Input.anyKey)
             {
                 bool changed = false;
@@ -33,14 +41,11 @@ namespace StatusMessage.patches
                 }
                 if (changed)
                 {
-                    string namebase = Plugin.configNameBase.Value;
-
-                    MonoSingleton<DataManager>.I.PlayerData.Name = namebase;
-                    if (MonoSingleton<MainSceneManager>.I != null)
-                    {
-                        NetworkSingleton<TextChannelManager>.I.MainCustomizationController.UpdatePlayerInfo(MonoSingleton<DataManager>.I.PlayerData.GetPlayerIdInfo());
-                        string text3 = (MonoSingleton<UIManager>.I.PlayerText.text = (NetworkSingleton<TextChannelManager>.I.UserName = MonoSingleton<DataManager>.I.PlayerData.Name));
-                    }
+                    if (gradientReady) gradientReady = false;
+                    SetName("basic");
+                    if (Plugin.configScrollingGradient.Value) rollingOffset = 0;
+                    if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+                    EmitUpdate();
                     
                 }
             }
@@ -51,40 +56,182 @@ namespace StatusMessage.patches
             if(awaytimer >= Plugin.configAFKTimer.Value * 60 && statusmsg == "" && !isAFK && Plugin.configUseAFK.Value)
             {
                 isAFK = true;
-                string namebase = Plugin.configNameBase.Value;
-                string pre = Plugin.configBracketType.Value.Substring(0,1);
-                string post = Plugin.configBracketType.Value.Substring(1);
-                string afkmsg = Plugin.configAFKMessage.Value;
-                string color = Plugin.configAFKColor.Value;
-
-                MonoSingleton<DataManager>.I.PlayerData.Name = namebase + " <color=#" + color + ">" + pre + afkmsg + post + "</color>";
-                if (MonoSingleton<MainSceneManager>.I != null)
-                {
-                    NetworkSingleton<TextChannelManager>.I.MainCustomizationController.UpdatePlayerInfo(MonoSingleton<DataManager>.I.PlayerData.GetPlayerIdInfo());
-                    string text3 = (MonoSingleton<UIManager>.I.PlayerText.text = (NetworkSingleton<TextChannelManager>.I.UserName = MonoSingleton<DataManager>.I.PlayerData.Name));
-                }
+                if (gradientReady) gradientReady = false;
+                SetName("afk");
+                if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+                EmitUpdate();
                 
                 
             }
             else if(awaytimer >= Plugin.configBRBTimer.Value * 60 && statusmsg == "" && !isBRB && Plugin.configUseBRB.Value)
             {
                 isBRB = true;
-                string namebase = Plugin.configNameBase.Value;
-                string pre = Plugin.configBracketType.Value.Substring(0,1);
-                string post = Plugin.configBracketType.Value.Substring(1);
-                string brbmsg = Plugin.configBRBMessage.Value;
-                string color = Plugin.configBRBColor.Value;
+                if (gradientReady) gradientReady = false;
+                SetName("brb");
 
-                MonoSingleton<DataManager>.I.PlayerData.Name = namebase + " <color=#" + color + ">" + pre + brbmsg + post + "</color>";
-                if (MonoSingleton<MainSceneManager>.I != null)
-                {
-                    NetworkSingleton<TextChannelManager>.I.MainCustomizationController.UpdatePlayerInfo(MonoSingleton<DataManager>.I.PlayerData.GetPlayerIdInfo());
-                    string text3 = (MonoSingleton<UIManager>.I.PlayerText.text = (NetworkSingleton<TextChannelManager>.I.UserName = MonoSingleton<DataManager>.I.PlayerData.Name));
-                }
+                if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+                EmitUpdate();
                 
             }
+
+            if(Plugin.configUseGradient.Value && Plugin.configScrollingGradient.Value && gradientReady)
+            {
+                nameTimer += Time.deltaTime;
+                if (nameTimer > tickRate)
+                {
+                    nameTimer = 0;
+                    rollingOffset++;
+                    if (rollingOffset >= nameLen) rollingOffset = 0;
+                    if (statusmsg != "")
+                    {
+                        SetName("status");
+                        EmitUpdate();
+                    }
+                    else if (isAFK)
+                    {
+                        SetName("afk");
+                        EmitUpdate();
+                    }
+                    else if (isBRB)
+                    {
+                        SetName("brb");
+                        EmitUpdate();
+                    }
+                    else
+                    {
+                        SetName("basic");
+                        EmitUpdate();
+                    }
+                    CheckChangeTickrate();
+                }
+            }
         }
-        
+        public static int nameLen;
+        public static int rollingOffset = 0;
+        public static float tickRate = 0.0625f;
+        public static bool gradientReady = false;
+        public static List<string> colorlist = [];
+        public static void MakeGradient(string name)
+        {
+            nameLen = name.Length;
+            nameLen += Plugin.configGradientBuffer.Value;
+            int r_one = Convert.ToInt32(Plugin.configGradientColor1.Value.Substring(0,2), 16);
+            int r_two = Convert.ToInt32(Plugin.configGradientColor2.Value.Substring(0,2), 16);
+            int r_three = Convert.ToInt32(Plugin.configGradientColor3.Value.Substring(0,2), 16);
+
+            int g_one = Convert.ToInt32(Plugin.configGradientColor1.Value.Substring(2,2), 16);
+            int g_two = Convert.ToInt32(Plugin.configGradientColor2.Value.Substring(2,2), 16);
+            int g_three = Convert.ToInt32(Plugin.configGradientColor3.Value.Substring(2,2), 16);
+
+            int b_one = Convert.ToInt32(Plugin.configGradientColor1.Value.Substring(4,2), 16);
+            int b_two = Convert.ToInt32(Plugin.configGradientColor2.Value.Substring(4,2), 16);
+            int b_three = Convert.ToInt32(Plugin.configGradientColor3.Value.Substring(4,2), 16);
+
+            colorlist.Clear();
+            if(!Plugin.configScrollingGradient.Value)
+            {
+                if(!Plugin.configUseThirdColor.Value)
+                {
+                    for (var i = 0; i < nameLen; i++)
+                    {
+                        string r = ColorSnap(r_one + (int)((r_two - r_one) * i / nameLen)).ToString("x2");
+                        string g = ColorSnap(g_one + (int)((g_two - g_one) * i / nameLen)).ToString("x2");
+                        string b = ColorSnap(b_one + (int)((b_two - b_one) * i / nameLen)).ToString("x2");
+                        string final = r + g + b;
+                        colorlist.Add(final);
+                    }
+                }
+                else
+                {
+                    int halfway = (int)Math.Ceiling((double)nameLen / 2);
+                    if( halfway < 1) halfway = 1;
+                    for (var i = 0; i < halfway; i++)
+                    {
+                        string r = ColorSnap(r_one + (int)((r_two - r_one) * i / halfway)).ToString("x2");
+                        string g = ColorSnap(g_one + (int)((g_two - g_one) * i / halfway)).ToString("x2");
+                        string b = ColorSnap(b_one + (int)((b_two - b_one) * i / halfway)).ToString("x2");
+                        string final = r + g + b;
+                        colorlist.Add(final);
+                    }
+                    int secondhalf = nameLen - halfway > 0 ? nameLen - halfway : 1;
+                    for (var i = 0; i < secondhalf; i++)
+                    {
+                        string r = ColorSnap(r_two + (int)((r_three - r_two) * i / halfway)).ToString("x2");
+                        string g = ColorSnap(g_two + (int)((g_three - g_two) * i / halfway)).ToString("x2");
+                        string b = ColorSnap(b_two + (int)((b_three - b_two) * i / halfway)).ToString("x2");
+                        string final = r + g + b;
+                        colorlist.Add(final);
+                    }
+                }
+            }
+            else
+            {
+                int halfway = (int)Math.Ceiling((double)nameLen / 2);
+                if( halfway < 1) halfway = 1;
+                for (var i = 0; i < halfway; i++)
+                {
+                    string r = ColorSnap(r_one + (int)((r_two - r_one) * i / halfway)).ToString("x2");
+                    string g = ColorSnap(g_one + (int)((g_two - g_one) * i / halfway)).ToString("x2");
+                    string b = ColorSnap(b_one + (int)((b_two - b_one) * i / halfway)).ToString("x2");
+                    string final = r + g + b;
+                    colorlist.Add(final);
+
+                }
+                int secondhalf = nameLen - halfway > 0 ? nameLen - halfway : 1;
+                for (var i = 0; i < secondhalf; i++)
+                {
+                    string r = ColorSnap(r_two + (int)((r_one - r_two) * i / halfway)).ToString("x2");
+                    string g = ColorSnap(g_two + (int)((g_one - g_two) * i / halfway)).ToString("x2");
+                    string b = ColorSnap(b_two + (int)((b_one - b_two) * i / halfway)).ToString("x2");
+                    string final = r + g + b;
+                    colorlist.Add(final);
+                }
+            }
+            if(colorlist.Count > 0)
+            {
+                gradientReady = true;
+                if (statusmsg != "") SetName("status");
+                else if (isAFK) SetName("afk");
+                else if (isBRB) SetName("brb");
+                else SetName("basic");
+            }
+        }
+        public static void CheckChangeTickrate()
+        {
+            try
+            {
+            LobbyManager lobbyManager = MonoSingleton<MultiplayerManager>.I._lobbyManager;
+            int cur = lobbyManager.CurrentLobby.Members.Count;
+            int roundup = (int)Math.Ceiling((double)cur / 16);
+            tickRate = 0.0625f * roundup;
+            }
+            catch (NullReferenceException) {}
+        }
+        public static string ApplyGradient(string name)
+        {
+            if (!gradientReady) return "";
+            name = name.Trim();
+            string nametotal = "";
+            char[] chars = name.ToCharArray();
+            for (int c = 0; c < chars.Count(); c++)
+            {
+                int colorIndex = c + rollingOffset;
+                if (colorIndex >= colorlist.Count()) colorIndex -= colorlist.Count();
+                if (colorIndex < 0) colorIndex = 0;
+                //Debug.Log("Debug:" + colorIndex.ToString() + ", " + colorlist.Count().ToString() + "; " + c.ToString() + ", " + chars.Count().ToString() + ".");
+
+                string a = "<color=#" + colorlist[colorIndex] + ">" + chars[c].ToString() + "</color>";
+                nametotal += a;
+            }
+            return nametotal;
+        }
+        public static int ColorSnap(int input)
+        {
+            if (input < 0) input = 0;
+            if (input > 255) input = 255;
+            return input;
+        }
+
         [HarmonyPatch("OnEnterPressed")]
         [HarmonyPrefix]
         public static bool TextChecker()
@@ -92,9 +239,9 @@ namespace StatusMessage.patches
             string text = MonoSingleton<UIManager>.I.MessageInput.text;
             if (text == "/help")
             {
-                MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                EventSystem.current.SetSelectedGameObject(null);
-                NetworkSingleton<TextChannelManager>.I.AddNotification("/help status for StatusManager commands");
+                ResetPostMessage(true);
+                Notify("/help status for StatusManager commands");
+                Notify("/help gradient for commands to control gradients");
                 return true;
             }
             if (text.Length >= 15) // /changebrackets @ 15
@@ -106,54 +253,179 @@ namespace StatusMessage.patches
                         Plugin.configBracketType.Value = text.Substring(16,2);
                         if (statusmsg != "")
                         {
-                            string namebase = Plugin.configNameBase.Value;
-                            string pre = Plugin.configBracketType.Value.Substring(0,1);
-                            string post = Plugin.configBracketType.Value.Substring(1);
-                            string color = Plugin.configCustomColor.Value;
-
-                            MonoSingleton<DataManager>.I.PlayerData.Name = namebase + " <color=#" + color + ">" + pre + statusmsg + post + "</color>";
-                            if (MonoSingleton<MainSceneManager>.I != null)
-                            {
-                                NetworkSingleton<TextChannelManager>.I.MainCustomizationController.UpdatePlayerInfo(MonoSingleton<DataManager>.I.PlayerData.GetPlayerIdInfo());
-                                string text3 = (MonoSingleton<UIManager>.I.PlayerText.text = (NetworkSingleton<TextChannelManager>.I.UserName = MonoSingleton<DataManager>.I.PlayerData.Name));
-                            }
+                            if (gradientReady) gradientReady = false;
+                            SetName("status");
+                            if (Plugin.configScrollingGradient.Value) rollingOffset = 0;
+                            if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+                            EmitUpdate();
                         }
-                        NetworkSingleton<TextChannelManager>.I.AddNotification("Brackets changed to " + Plugin.configBracketType.Value);
+                        Notify("Brackets changed to " + Plugin.configBracketType.Value);
                     }
                     else
                     {
-                        NetworkSingleton<TextChannelManager>.I.AddNotification("Brackets currently set to " + Plugin.configBracketType.Value);
+                        Notify("Brackets currently set to " + Plugin.configBracketType.Value);
                     }
 
-                    MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                    EventSystem.current.SetSelectedGameObject(null);
-                    
-                    MonoSingleton<UIManager>.I.MessageInput.text = "";
-
+                    ResetPostMessage();
                     return false;
 
                     
                 }
             }
-            if (text.Length >= 12) // /clearstatus, /statuscolor
+            if (text == "/gradientscroll")
+            {
+                gradientReady = false;
+                Plugin.configScrollingGradient.Value = !Plugin.configScrollingGradient.Value;
+                if(Plugin.configScrollingGradient.Value) Plugin.configUseThirdColor.Value = !Plugin.configScrollingGradient.Value;
+                string scrollOnOff = Plugin.configScrollingGradient.Value ? "on" : "off";
+                rollingOffset = 0;
+                if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+                Notify("Scrolling gradient turned " + scrollOnOff);
+                EmitUpdate();
+                ResetPostMessage();
+                return false;
+            }
+            if (text.Length >= 16) // /gradientstretch
+            {
+                if (text.Substring(0,16) == "/gradientstretch")
+                {
+                    if(int.TryParse(text.Substring(17), out int index))
+                    {
+                        if (index < 0) index = 0;
+                        else if (index > 64) index = 64;
+                        Plugin.configGradientBuffer.Value = index;
+                        Notify("Gradient buffer size set to " + index.ToString() + ".");
+                        if (Plugin.configScrollingGradient.Value) rollingOffset = 0;
+                        if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+                    }
+                    else
+                    {
+                        Notify("Gradient buffer size currently set to " + Plugin.configGradientBuffer.Value.ToString() + ".");
+                    }
+                    EmitUpdate();
+                    ResetPostMessage();
+                    return false;
+                }
+            }
+            if (text.Length >= 14) // /gradientcolor, /gradientthree
+            {
+                string commandcheck = text.Substring(0,14);
+                switch (commandcheck)
+                {
+                    case "/gradientcolor":
+                        if (text.Length >= 16)
+                        {
+                            if(int.TryParse(text.Substring(15,1), out int index))
+                            {
+                                if(index==1)
+                                {
+                                    if (text.Length >= 23)
+                                    {
+                                        gradientReady = false;
+                                        Plugin.configGradientColor1.Value = text.Substring(17,6);
+                                        if (Plugin.configScrollingGradient.Value) rollingOffset = 0;
+                                        if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+                                        Notify("Gradient color 1 set to <color=#" + Plugin.configGradientColor1.Value + ">" + Plugin.configGradientColor1.Value + "</color>.");
+                                    }
+                                    else
+                                    {
+                                        Notify("Gradient color 1 currently set to <color=#" + Plugin.configGradientColor1.Value + ">" + Plugin.configGradientColor1.Value + "</color>.");
+                                    }
+                                }
+                                else if(index==2)
+                                {
+                                    if (text.Length >= 23)
+                                    {
+                                        gradientReady = false;
+                                        Plugin.configGradientColor2.Value = text.Substring(17,6);
+                                        if (Plugin.configScrollingGradient.Value) rollingOffset = 0;
+                                        if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+                                        Notify("Gradient color 2 set to <color=#" + Plugin.configGradientColor2.Value + ">" + Plugin.configGradientColor2.Value + "</color>.");
+                                    }
+                                    else
+                                    {
+                                        Notify("Gradient color 2 currently set to <color=#" + Plugin.configGradientColor2.Value + ">" + Plugin.configGradientColor2.Value + "</color>.");
+                                    }
+                                }
+                                else if(index==3)
+                                {
+                                    if (text.Length >= 23)
+                                    {
+                                        gradientReady = false;
+                                        Plugin.configGradientColor3.Value = text.Substring(17,6);
+                                        if (Plugin.configScrollingGradient.Value) rollingOffset = 0;
+                                        if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+                                        Notify("Gradient color 3 set to <color=#" + Plugin.configGradientColor3.Value + ">" + Plugin.configGradientColor3.Value + "</color>.");
+                                    }
+                                    else
+                                    {
+                                        Notify("Gradient color 3 currently set to <color=#" + Plugin.configGradientColor3.Value + ">" + Plugin.configGradientColor3.Value + "</color>.");
+                                    }
+                                }
+                                else
+                                {
+                                    Notify("Must specify a number 1 - 3 and a color.");
+                                    Notify("example: /gradientcolor 1 123456");
+                                }
+
+                            }
+                            else
+                            {
+                                Notify("Must specify a number 1 - 3 and a color.");
+                                Notify("example: /gradientcolor 1 123456");
+                            }
+                        }
+                        else
+                        {
+                            Notify("Must specify a number 1 - 3 and a color.");
+                            Notify("example: /gradientcolor 1 123456");
+                        }
+                        EmitUpdate();
+                        ResetPostMessage();
+                        return false;
+                    case "/gradientthree":
+                        gradientReady = false;
+                        Plugin.configUseThirdColor.Value = !Plugin.configUseThirdColor.Value;
+                        string threeonoff = Plugin.configUseThirdColor.Value ? "on" : "off";
+                        if (Plugin.configUseThirdColor.Value) Plugin.configScrollingGradient.Value = !Plugin.configUseThirdColor.Value;
+                        rollingOffset = 0;
+                        if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+                        Notify("Gradient 3 turned " + threeonoff);
+                        EmitUpdate();
+                        ResetPostMessage();
+                        return false;
+                }
+            }
+            if (text.Length >= 12) // /clearstatus, /statuscolor, /usegradient
             {
                 string commandcheck = text.Substring(0,12);
                 switch (commandcheck)
                 {
-                    case "/clearstatus":
-                        statusmsg = "";
-                        MonoSingleton<DataManager>.I.PlayerData.Name = Plugin.configNameBase.Value;
-                        if (MonoSingleton<MainSceneManager>.I != null)
+                    case "/usegradient":
+                        Plugin.configUseGradient.Value = !Plugin.configUseGradient.Value;
+                        string usegrad = Plugin.configUseGradient.Value ? "on" : "off";
+                        Notify("Gradients turned " + usegrad);
+                        if (Plugin.configScrollingGradient.Value) rollingOffset = 0;                
+                        if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+                        else
                         {
-                            NetworkSingleton<TextChannelManager>.I.MainCustomizationController.UpdatePlayerInfo(MonoSingleton<DataManager>.I.PlayerData.GetPlayerIdInfo());
-                            string text3 = (MonoSingleton<UIManager>.I.PlayerText.text = (NetworkSingleton<TextChannelManager>.I.UserName = MonoSingleton<DataManager>.I.PlayerData.Name));
+                            gradientReady = false;
+                            SetName("basic");
                         }
 
-                        MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-		                EventSystem.current.SetSelectedGameObject(null);
-                        
-                        MonoSingleton<UIManager>.I.MessageInput.text = "";
-                        NetworkSingleton<TextChannelManager>.I.AddNotification("Status message cleared.");
+                        EmitUpdate();
+                        ResetPostMessage();
+
+                        return false;
+                    case "/clearstatus":
+                        statusmsg = "";
+                        if (gradientReady) gradientReady = false;
+                        SetName("basic");
+                        if (Plugin.configScrollingGradient.Value) rollingOffset = 0;
+                        if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+                        EmitUpdate();
+                        ResetPostMessage();
+                        Notify("Status message cleared.");
                     
                         return false;
                     case "/statuscolor":
@@ -163,31 +435,21 @@ namespace StatusMessage.patches
                             Plugin.configCustomColor.Value = color;
                             if (statusmsg != "")
                             {
-                                string namebase = Plugin.configNameBase.Value;
-                                string pre = Plugin.configBracketType.Value.Substring(0,1);
-                                string post = Plugin.configBracketType.Value.Substring(1);
-
-                                MonoSingleton<DataManager>.I.PlayerData.Name = namebase + " <color=#" + color + ">" + pre + statusmsg + post + "</color>";
-                                if (MonoSingleton<MainSceneManager>.I != null)
-                                {
-                                    NetworkSingleton<TextChannelManager>.I.MainCustomizationController.UpdatePlayerInfo(MonoSingleton<DataManager>.I.PlayerData.GetPlayerIdInfo());
-                                    string text3 = (MonoSingleton<UIManager>.I.PlayerText.text = (NetworkSingleton<TextChannelManager>.I.UserName = MonoSingleton<DataManager>.I.PlayerData.Name));
-                                }
-                                NetworkSingleton<TextChannelManager>.I.AddNotification("Status color changed to <color=#" + Plugin.configCustomColor.Value + ">" + Plugin.configCustomColor.Value + "</color>.");
+                                if (gradientReady) gradientReady = false;
+                                SetName("status");
+                                if (Plugin.configScrollingGradient.Value) rollingOffset = 0;
+                                if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+                                EmitUpdate();
+                                Notify("Status color changed to <color=#" + Plugin.configCustomColor.Value + ">" + Plugin.configCustomColor.Value + "</color>.");
                             }
                             
                         }
                         else
                         {
-                            NetworkSingleton<TextChannelManager>.I.AddNotification("Status color currently set to <color=#" + Plugin.configCustomColor.Value + ">" + Plugin.configCustomColor.Value + "</color>.");  
+                            Notify("Status color currently set to <color=#" + Plugin.configCustomColor.Value + ">" + Plugin.configCustomColor.Value + "</color>.");  
                         }
-                        MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-		                EventSystem.current.SetSelectedGameObject(null);
-		
-                        MonoSingleton<UIManager>.I.MessageInput.text = "";
-                    
+                        ResetPostMessage();
                         return false;
-
                 }
             }
             if (text.Length >= 9) // /brbcolor /afkcolor
@@ -202,18 +464,14 @@ namespace StatusMessage.patches
                         color = text.Substring(10,6);
                         Plugin.configBRBColor.Value = color;
 
-                        MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                        EventSystem.current.SetSelectedGameObject(null);
-                        MonoSingleton<UIManager>.I.MessageInput.text = "";
-                        NetworkSingleton<TextChannelManager>.I.AddNotification("BRB color changed to <color=#" + Plugin.configBRBColor.Value + ">" + Plugin.configBRBColor.Value + "</color>.");
+                        ResetPostMessage();
+                        Notify("BRB color changed to <color=#" + Plugin.configBRBColor.Value + ">" + Plugin.configBRBColor.Value + "</color>.");
                         return false;
                     }
                     else
                     {
-                        MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                        EventSystem.current.SetSelectedGameObject(null);
-                        MonoSingleton<UIManager>.I.MessageInput.text = "";
-                        NetworkSingleton<TextChannelManager>.I.AddNotification("BRB color currently set to <color=#" + Plugin.configBRBColor.Value + ">" + Plugin.configBRBColor.Value + "</color>.");
+                        ResetPostMessage();
+                        Notify("BRB color currently set to <color=#" + Plugin.configBRBColor.Value + ">" + Plugin.configBRBColor.Value + "</color>.");
                         return false;
                     }
 
@@ -222,19 +480,14 @@ namespace StatusMessage.patches
                     {
                         color = text.Substring(10,6);
                         Plugin.configAFKColor.Value = color;
-
-                        MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-		                EventSystem.current.SetSelectedGameObject(null);
-                        MonoSingleton<UIManager>.I.MessageInput.text = "";
-                        NetworkSingleton<TextChannelManager>.I.AddNotification("AFK color changed to <color=#" + Plugin.configAFKColor.Value + ">" + Plugin.configAFKColor.Value + "</color>.");
+                        ResetPostMessage();
+                        Notify("AFK color changed to <color=#" + Plugin.configAFKColor.Value + ">" + Plugin.configAFKColor.Value + "</color>.");
                         return false;
                     }
                     else
                     {
-                        MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-		                EventSystem.current.SetSelectedGameObject(null);
-                        MonoSingleton<UIManager>.I.MessageInput.text = "";
-                        NetworkSingleton<TextChannelManager>.I.AddNotification("AFK color currently set to <color=#" + Plugin.configAFKColor.Value + ">" + Plugin.configAFKColor.Value + "</color>.");
+                        ResetPostMessage();
+                        Notify("AFK color currently set to <color=#" + Plugin.configAFKColor.Value + ">" + Plugin.configAFKColor.Value + "</color>.");
                         return false;
                     }
                         
@@ -251,16 +504,14 @@ namespace StatusMessage.patches
                         if(int.TryParse(text.Substring(10), out int brbnum))
                         {
                             Plugin.configBRBTimer.Value = brbnum;
-                            NetworkSingleton<TextChannelManager>.I.AddNotification("BRB timer changed to " + Plugin.configBRBTimer.Value.ToString() + " minutes.");
+                            Notify("BRB timer changed to " + Plugin.configBRBTimer.Value.ToString() + " minutes.");
                         }
                     }
                     else
                     {
-                        NetworkSingleton<TextChannelManager>.I.AddNotification("BRB timer currently set to " + Plugin.configBRBTimer.Value.ToString() + " minutes.");
+                        Notify("BRB timer currently set to " + Plugin.configBRBTimer.Value.ToString() + " minutes.");
                     }
-                    MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                    EventSystem.current.SetSelectedGameObject(null);
-                    MonoSingleton<UIManager>.I.MessageInput.text = "";
+                    ResetPostMessage();
                     return false;
 
                     case "/afktimer":
@@ -269,16 +520,14 @@ namespace StatusMessage.patches
                         if(int.TryParse(text.Substring(10), out int afknum))
                         {
                             Plugin.configAFKTimer.Value = afknum;
-                            NetworkSingleton<TextChannelManager>.I.AddNotification("AFK timer changed to " + Plugin.configAFKTimer.Value.ToString() + " minutes.");
+                            Notify("AFK timer changed to " + Plugin.configAFKTimer.Value.ToString() + " minutes.");
                         }
                     }
                     else
                     {
-                        NetworkSingleton<TextChannelManager>.I.AddNotification("AFK timer currently set to " + Plugin.configAFKTimer.Value.ToString() + " minutes.");
+                        Notify("AFK timer currently set to " + Plugin.configAFKTimer.Value.ToString() + " minutes.");
                     }
-                    MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                    EventSystem.current.SetSelectedGameObject(null);
-                    MonoSingleton<UIManager>.I.MessageInput.text = "";
+                    ResetPostMessage();
                     return false;
                 }
             }
@@ -286,26 +535,25 @@ namespace StatusMessage.patches
             {
                 if (text.Substring(0,8) == "/setname")
                 {
-                    if (text.Length > 8)
+                    if (text.Length > 9)
                     {
-                        string newname = text.Substring(9);
+
+                        string newname = text.Substring(9); //gradientReady? ApplyGradient(text.Substring(9)) : text.Substring(9);
+                        if (gradientReady) gradientReady = false;
                         Plugin.configNameBase.Value = newname;
-                        MonoSingleton<DataManager>.I.PlayerData.Name = newname;
-                        if (MonoSingleton<MainSceneManager>.I != null)
-                        {
-                            NetworkSingleton<TextChannelManager>.I.MainCustomizationController.UpdatePlayerInfo(MonoSingleton<DataManager>.I.PlayerData.GetPlayerIdInfo());
-                            string text3 = (MonoSingleton<UIManager>.I.PlayerText.text = (NetworkSingleton<TextChannelManager>.I.UserName = MonoSingleton<DataManager>.I.PlayerData.Name));
-                        }
-                        NetworkSingleton<TextChannelManager>.I.AddNotification("Name changed to " + Plugin.configNameBase.Value + ".");
+                        Notify("Name changed to " + newname + ".");
+                        ResetPostMessage();
+                        if (Plugin.configScrollingGradient.Value) rollingOffset = 0;
+                        if (Plugin.configUseGradient.Value) MakeGradient(newname);
+                        EmitUpdate();
                     
                     }
                     else
                     {
-                        NetworkSingleton<TextChannelManager>.I.AddNotification("Name currently registered as " + Plugin.configNameBase.Value + ".");
+                        string name = gradientReady ? ApplyGradient(Plugin.configNameBase.Value) : Plugin.configNameBase.Value;
+                        Notify("Name currently registered as " + name + ".");
+                        ResetPostMessage();
                     }
-                    MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                    EventSystem.current.SetSelectedGameObject(null);
-                    MonoSingleton<UIManager>.I.MessageInput.text = "";
                     return false;
                 }
             }
@@ -318,21 +566,15 @@ namespace StatusMessage.patches
                     if (text.Length > 8)
                     {
                         Plugin.configBRBMessage.Value = text.Substring(8);
-
-                        MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                        EventSystem.current.SetSelectedGameObject(null);
-                        MonoSingleton<UIManager>.I.MessageInput.text = "";
-                        NetworkSingleton<TextChannelManager>.I.AddNotification("BRB message changed to " + Plugin.configBRBMessage.Value + ".");
+                        ResetPostMessage();
+                        Notify("BRB message changed to " + Plugin.configBRBMessage.Value + ".");
                         return false;
                         
                     }
                     else
                     {
-                        MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                        EventSystem.current.SetSelectedGameObject(null);
-                        MonoSingleton<UIManager>.I.MessageInput.text = "";
-                        NetworkSingleton<TextChannelManager>.I.AddNotification("BRB message currently set to " + Plugin.configBRBMessage.Value + ".");
-                        
+                        ResetPostMessage();
+                        Notify("BRB message currently set to " + Plugin.configBRBMessage.Value + ".");
                         return false;
                     }
 
@@ -340,19 +582,14 @@ namespace StatusMessage.patches
                     if (text.Length > 8)
                     {
                         Plugin.configAFKMessage.Value = text.Substring(8);
-
-                        MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                        EventSystem.current.SetSelectedGameObject(null);
-                        MonoSingleton<UIManager>.I.MessageInput.text = "";
-                        NetworkSingleton<TextChannelManager>.I.AddNotification("AFK message changed to " + Plugin.configAFKMessage.Value + ".");
+                        ResetPostMessage();
+                        Notify("AFK message changed to " + Plugin.configAFKMessage.Value + ".");
                         return false;   
                     }
                     else
                     {
-                        MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                        EventSystem.current.SetSelectedGameObject(null);
-                        MonoSingleton<UIManager>.I.MessageInput.text = "";
-                        NetworkSingleton<TextChannelManager>.I.AddNotification("AFK message currently set to " + Plugin.configAFKMessage.Value + ".");
+                        ResetPostMessage();
+                        Notify("AFK message currently set to " + Plugin.configAFKMessage.Value + ".");
                         return false;
                     }
 
@@ -360,40 +597,26 @@ namespace StatusMessage.patches
                     if (text.Length > 8)
                     {
                         statusmsg = text.Substring(8);
-                        string namebase = Plugin.configNameBase.Value;
-                        string pre = Plugin.configBracketType.Value.Substring(0,1);
-                        string post = Plugin.configBracketType.Value.Substring(1);
-                        string color = Plugin.configCustomColor.Value;
-
-                        MonoSingleton<DataManager>.I.PlayerData.Name = namebase + " <color=#" + color + ">" + pre + statusmsg + post + "</color>";
-                        if (MonoSingleton<MainSceneManager>.I != null)
-                        {
-                            NetworkSingleton<TextChannelManager>.I.MainCustomizationController.UpdatePlayerInfo(MonoSingleton<DataManager>.I.PlayerData.GetPlayerIdInfo());
-                            string text3 = (MonoSingleton<UIManager>.I.PlayerText.text = (NetworkSingleton<TextChannelManager>.I.UserName = MonoSingleton<DataManager>.I.PlayerData.Name));
-                        }
-
-                        MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                        EventSystem.current.SetSelectedGameObject(null);
-                        MonoSingleton<UIManager>.I.MessageInput.text = "";
-                        NetworkSingleton<TextChannelManager>.I.AddNotification("Status changed to " + statusmsg + ".");
+                        if (gradientReady) gradientReady = false;
+                        SetName("status");
+                        if (Plugin.configScrollingGradient.Value) rollingOffset = 0;
+                        if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+                        EmitUpdate();
+                        ResetPostMessage();
+                        Notify("Status changed to " + statusmsg + ".");
                         return false;
                     }
                     else
                     {
                         statusmsg = "";
-                        MonoSingleton<DataManager>.I.PlayerData.Name = Plugin.configNameBase.Value;
-                        if (MonoSingleton<MainSceneManager>.I != null)
-                        {
-                            NetworkSingleton<TextChannelManager>.I.MainCustomizationController.UpdatePlayerInfo(MonoSingleton<DataManager>.I.PlayerData.GetPlayerIdInfo());
-                            string text3 = (MonoSingleton<UIManager>.I.PlayerText.text = (NetworkSingleton<TextChannelManager>.I.UserName = MonoSingleton<DataManager>.I.PlayerData.Name));
-                        }
+                        if (gradientReady) gradientReady = false;
+                        SetName("basic");
+                        if (Plugin.configScrollingGradient.Value) rollingOffset = 0;
+                        if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+                        EmitUpdate();
+                        ResetPostMessage();
+                        Notify("Status message cleared.");
 
-                        MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                        EventSystem.current.SetSelectedGameObject(null);
-                        
-                        MonoSingleton<UIManager>.I.MessageInput.text = "";
-                        NetworkSingleton<TextChannelManager>.I.AddNotification("Status message cleared.");
-                    
                         return false;
                     }
                 }
@@ -406,45 +629,113 @@ namespace StatusMessage.patches
                     Plugin.configUseAFK.Value = !Plugin.configUseAFK.Value;
                     string a_onoff = Plugin.configUseAFK.Value ? "on" : "off";
 
-                    MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                    EventSystem.current.SetSelectedGameObject(null);
-                    MonoSingleton<UIManager>.I.MessageInput.text = "";
-                    NetworkSingleton<TextChannelManager>.I.AddNotification("AFK system turned " + a_onoff + ".");
+                    ResetPostMessage();
+                    Notify("AFK system turned " + a_onoff + ".");
                     return false;
 
                     case "/usebrb":
                     Plugin.configUseBRB.Value = !Plugin.configUseBRB.Value;
                     string b_onoff = Plugin.configUseBRB.Value ? "on" : "off";
 
-                    MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                    EventSystem.current.SetSelectedGameObject(null);
-                    MonoSingleton<UIManager>.I.MessageInput.text = "";
-                    NetworkSingleton<TextChannelManager>.I.AddNotification("BRB system turned " + b_onoff + ".");
+                    ResetPostMessage();
+                    Notify("BRB system turned " + b_onoff + ".");
                     return false;
                 }
             }
             if (text.ToLower() == "/help statusmanager" || text.ToLower() == "/help status")
             {
-                NetworkSingleton<TextChannelManager>.I.AddNotification("Available commands:");
-                NetworkSingleton<TextChannelManager>.I.AddNotification("/setname <color=#4394b0>name</color>");
-                NetworkSingleton<TextChannelManager>.I.AddNotification("/status <color=#4394b0>anything</color>");
-                NetworkSingleton<TextChannelManager>.I.AddNotification("/statuscolor <color=#9db143>123456</color>");
-                NetworkSingleton<TextChannelManager>.I.AddNotification("/clearstatus");
-                NetworkSingleton<TextChannelManager>.I.AddNotification("/changebrackets <color=#4394b0>()</color>");
-                NetworkSingleton<TextChannelManager>.I.AddNotification("/useafk, /usebrb (same syntax applies for all below)");
-                NetworkSingleton<TextChannelManager>.I.AddNotification("/afkmsg <color=#4394b0>AFK</color>");
-                NetworkSingleton<TextChannelManager>.I.AddNotification("/afktimer <color=#a83131>x</color> (in minutes)");
-                NetworkSingleton<TextChannelManager>.I.AddNotification("/afkcolor <color=#9db143>123456</color>");
-
-                MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                EventSystem.current.SetSelectedGameObject(null);
-                MonoSingleton<UIManager>.I.MessageInput.text = "";
+                Notify("<b>Available commands:</b>");
+                Notify("/setname <color=#4394b0>name</color>");
+                Notify("/status <color=#4394b0>anything</color>");
+                Notify("/statuscolor <color=#9db143>123456</color>");
+                Notify("/clearstatus");
+                Notify("/changebrackets <color=#4394b0>()</color>");
+                Notify("/useafk, /usebrb (same syntax applies for all below)");
+                Notify("/afkmsg <color=#4394b0>AFK</color>");
+                Notify("/afktimer <color=#a83131>x</color> (in minutes)");
+                Notify("/afkcolor <color=#9db143>123456</color>");
+                
+                ResetPostMessage();
                 return false;
-                        
-                   
             }
-
+            if (text.ToLower() == "/help gradient")
+            {
+                Notify("<b>Available commands:</b>");
+                Notify("/usegradient");
+                Notify("<b><i>Make sure to /setname to ONLY your name, no tags</b></i>");
+                Notify("/gradientcolor <color=#a83131>x</color> <color=#9db143>123456</color>");
+                Notify("/gradientstretch <color=#a83131>xx</color> (0-64)");
+                Notify("/gradientthree - enable third gradient color");
+                Notify("/gradientscroll - gradient autoscrolling");
+                Notify("turning on third gradient will disable gradient scrolling and vice versa.");
+                
+                ResetPostMessage();
+                return false;
+            }
             return true;
+        }
+        public static void SetName(string type)
+        {
+            switch(type)
+            {
+                case "basic":
+                    string basic_namebase = gradientReady ? ApplyGradient(Plugin.configNameBase.Value) : Plugin.configNameBase.Value;
+                    MonoSingleton<DataManager>.I.PlayerData.Name = basic_namebase;
+                    break;
+                case "status":
+                    string status_namebase = gradientReady ? ApplyGradient(Plugin.configNameBase.Value) : Plugin.configNameBase.Value;
+                    string status_pre = Plugin.configBracketType.Value.Substring(0,1);
+                    string status_post = Plugin.configBracketType.Value.Substring(1);
+                    string status_color = Plugin.configCustomColor.Value;
+                    MonoSingleton<DataManager>.I.PlayerData.Name = status_namebase + " <color=#" + status_color + ">" + status_pre + statusmsg + status_post + "</color>";
+                    break;
+                case "brb":
+                    string brb_namebase = gradientReady ? ApplyGradient(Plugin.configNameBase.Value) : Plugin.configNameBase.Value;
+                    string brb_pre = Plugin.configBracketType.Value.Substring(0,1);
+                    string brb_post = Plugin.configBracketType.Value.Substring(1);
+                    string brbmsg = Plugin.configBRBMessage.Value;
+                    string brb_color = Plugin.configBRBColor.Value;
+                    
+                    MonoSingleton<DataManager>.I.PlayerData.Name = brb_namebase + " <color=#" + brb_color + ">" + brb_pre + brbmsg + brb_post + "</color>";
+                    break;
+                case "afk":
+                    string afk_namebase = gradientReady ? ApplyGradient(Plugin.configNameBase.Value) : Plugin.configNameBase.Value;
+                    string afk_pre = Plugin.configBracketType.Value.Substring(0,1);
+                    string afk_post = Plugin.configBracketType.Value.Substring(1);
+                    string afkmsg = Plugin.configAFKMessage.Value;
+                    string afk_color = Plugin.configAFKColor.Value;
+                    MonoSingleton<DataManager>.I.PlayerData.Name = afk_namebase + " <color=#" + afk_color + ">" + afk_pre + afkmsg + afk_post + "</color>";
+                    break;
+            }
+        }
+        public static void Notify(string notification)
+        {
+            NetworkSingleton<TextChannelManager>.I.AddNotification(notification);
+        }
+        public static void ResetPostMessage(bool skiptext = false)
+        {
+            MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
+            EventSystem.current.SetSelectedGameObject(null);
+            if(!skiptext) MonoSingleton<UIManager>.I.MessageInput.text = "";
+        }
+        public static void EmitUpdate()
+        {
+            if (MonoSingleton<MainSceneManager>.I != null)
+            {
+                try
+                {
+                    NetworkSingleton<TextChannelManager>.I.MainCustomizationController.UpdatePlayerInfo(MonoSingleton<DataManager>.I.PlayerData.GetPlayerIdInfo());
+                    string text3 = (MonoSingleton<UIManager>.I.PlayerText.text = (NetworkSingleton<TextChannelManager>.I.UserName = MonoSingleton<DataManager>.I.PlayerData.Name));
+                    if (_ifTeleportString != "")
+                    {
+                        var namefieldRef = AccessTools.FieldRefAccess<UIManager, TextMeshProUGUI>("_playerText");
+                        var nameinstance = MonoSingleton<UIManager>.I;
+                        var playname = MonoSingleton<DataManager>.I.PlayerData.Name;
+                        namefieldRef(nameinstance).text = playname + _ifTeleportString;
+                    }
+                }
+                catch (NullReferenceException) {}
+            }
         }
 
         [HarmonyPatch("SendMessageAsync")]
