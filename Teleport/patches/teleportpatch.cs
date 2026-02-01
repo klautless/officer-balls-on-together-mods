@@ -2,15 +2,24 @@
 using HarmonyLib;
 using TMPro;
 using UnityEngine;
+using BepInEx.Bootstrap;
+using StatusMessage.patches;
+using PurrNet;
+using PurrNet.Modules;
+using PurrNet.Packing;
+using PurrNet.Transports;
+using UnityEngine.InputSystem;
 
 namespace Teleport.patches
 {
     [HarmonyPatch(typeof(PlayerPanelController))]
     public static class TeleportPatch
     {
+        public static string targetingString;
+        public static string combinedName = "";
         public static bool setup = false;
         public static int index = 1;
-        
+        public static float wheelstate = 0f;
         public static PlayerController target = null;
 
         [HarmonyPatch("Update")]
@@ -31,7 +40,23 @@ namespace Teleport.patches
             var fieldRef = AccessTools.FieldRefAccess<UIManager, TMP_InputField>("_messageInputField");
             var instance = MonoSingleton<UIManager>.I;
             if (fieldRef(instance).isFocused) return;
-            if(Input.GetKeyDown(KeyCode.E) && Input.GetKey(KeyCode.LeftShift))
+            float temp = Mouse.current.scroll.value.y;
+            string command = "";
+            if (temp < 0 && wheelstate != temp)
+            {
+                command = "up";
+                wheelstate = temp;
+            }
+            else if (temp > 0 && wheelstate != temp)
+            {
+                command = "down";
+                wheelstate = temp;
+            }
+            else if (wheelstate != 0f && temp == 0f)
+            {
+                wheelstate = 0f;
+            }
+            if(command == "up" && Input.GetKey(KeyCode.LeftShift))
             {
                 if( NetworkSingleton<PlayerPanelController>.I.PlayerIDs.Count == 1 )
                 {
@@ -42,7 +67,7 @@ namespace Teleport.patches
                 tempdigit = 1;
                 goto changed;
             }
-            else if(Input.GetKeyDown(KeyCode.Q) && Input.GetKey(KeyCode.LeftShift))
+            else if(command == "down" && Input.GetKey(KeyCode.LeftShift))
             {
                 if( NetworkSingleton<PlayerPanelController>.I.PlayerIDs.Count == 1 )
                 {
@@ -54,7 +79,7 @@ namespace Teleport.patches
                 goto changed;
                 
             }
-            else if(Input.GetKeyDown(KeyCode.X) && Input.GetKey(KeyCode.LeftShift))
+            else if(Input.GetKeyDown(KeyCode.E) && Input.GetKey(KeyCode.LeftShift))
             {
                 if( NetworkSingleton<PlayerPanelController>.I.PlayerIDs.Count == 1 )
                 {
@@ -71,9 +96,10 @@ namespace Teleport.patches
                     if (index < 0) index = NetworkSingleton<PlayerPanelController>.I.PlayerIDs.Count - 1;
                     else if (index >= NetworkSingleton<PlayerPanelController>.I.PlayerIDs.Count ) index = 0;
                     target = NetworkSingleton<PlayerPanelController>.I.PlayerTransforms[index].GetComponent<PlayerController>();
-                    var taname = target.PlayerNameText.text;
-                    var ourname = MonoSingleton<DataManager>.I.PlayerData.Name;
-                    if (taname != ourname ) break;
+                    
+                    var tar_id = NetworkSingleton<PlayerPanelController>.I.PlayerIDs[index];
+                    var self_id = NetworkSingleton<TextChannelManager>.I.localPlayer;
+                    if (tar_id != self_id) break;
                     if (tempdigit == 1) index+=1;
                     else if (tempdigit == -1) index-=1;
                 
@@ -85,14 +111,21 @@ namespace Teleport.patches
                 //int num = NetworkSingleton<PlayerPanelController>.I.PlayerIDs.IndexOf(info.sender);
 		        target = NetworkSingleton<PlayerPanelController>.I.PlayerTransforms[index].GetComponent<PlayerController>();
                 var tname = target.PlayerNameText.text;
-                namefieldRef(nameinstance).text = playname + "            -            " + tname + " selected";
+                
+                targetingString = "            -            " + tname + " selected";
+                if (Chainloader.PluginInfos.TryGetValue("officerballs.StatusManager", out var basicInfo))
+                {
+                    StatusPatch._ifTeleportString = targetingString;
+                }
+                namefieldRef(nameinstance).text = playname + targetingString;
                 //Debug.Log(tname + " selected.");
                 return;
             warp:
                 if (target)
                 {
                     var controller = target.transform.GetComponentInChildren<PlayerMovementController>() as PlayerMovementController;
-                    NetworkSingleton<TextChannelManager>.I.MainPlayer.position = controller.transform.position;
+                    Teleporter.warppos = controller.transform.position;
+                    //NetworkSingleton<TextChannelManager>.I.MainPlayer.position = controller.transform.position;
                     //Debug.Log("warped?");
 
                     //Debug.Log(target.transform.GetComponentInChildren<PlayerMovementController>());
@@ -113,9 +146,34 @@ namespace Teleport.patches
             var playname = MonoSingleton<DataManager>.I.PlayerData.Name;
 
             var tname = target.PlayerNameText.text;
-            namefieldRef(nameinstance).text = playname + "            -            " + tname + " selected";
+            targetingString = "            -            " + tname + " selected";
+            if (Chainloader.PluginInfos.TryGetValue("officerballs.StatusManager", out var basicInfo))
+            {
+                StatusPatch._ifTeleportString = targetingString;
+            }
+            namefieldRef(nameinstance).text = playname + targetingString;
             //Debug.Log("player disconnected. " + tname + " selected.");
                 
+        }
+
+    }
+    [HarmonyPatch(typeof(PlayerMovementController))]
+    public static class Teleporter
+    {
+        public static Vector3 warppos = Vector3.zero;
+
+        [HarmonyPatch("MovePlayer")]
+        [HarmonyPrefix]
+        public static bool TeleSkip( ref CharacterController ____characterController, PlayerMovementController __instance)
+        {
+            if (warppos != Vector3.zero)
+            {
+                if( __instance != NetworkSingleton<TextChannelManager>.I.MainMovementController) return true;
+                ____characterController.transform.position = warppos;
+                warppos = Vector3.zero;
+                return false;
+            }
+            return true;
         }
 
     }
