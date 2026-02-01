@@ -2,11 +2,14 @@
 adds an auto-brb + auto-afk system, custom status messages, lots of flexibility!  
   
 check commands in game with /help any time.  
+
+**to change your name use the /setname command!**  
+**if you want to use gradients /setname to a name with NO tags first!**  
   
 ## Main commands  
   
 /help status - gives a summarized version of the main commands.  
-/setname - update your playername with this.  
+**/setname - update your playername with this.**  
 /status - sets your status message!  
 /clearstatus - removes your status message!  
 /statuscolor 123456 - configures the color of your status message!  
@@ -29,6 +32,7 @@ check commands in game with /help any time.
   
 /help gradient - gives information on the gradient commands.  
 /usegradient - toggles the gradient system. default: disabled.  
+***make sure your username has no color tags already! do /setname to a decolored name first.***  
 /gradientthree - toggles the third gradient color. default: disabled.  
 /gradientscroll - toggles the scrolling color effect. default: disabled.  
 /gradientcolor x 123456 - sets the gradient color (1, 2, or 3) to a hex color. defaults vary by number.  
