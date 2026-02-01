@@ -1,4 +1,5 @@
 ***Teleport*** - Allows you to warp to other players in the server.  
+Requires StatusManager v1.1.0 or higher.  
 Hotkeys:  
 - Shift + scroll -> rotate through players in the server.
 - Shift + E -> Teleport to selected player.
