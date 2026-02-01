@@ -1,4 +1,5 @@
 using BepInEx;
+using BepInEx.Bootstrap;
 using BepInEx.Logging;
 using HarmonyLib;
 using Teleport.patches;
@@ -6,11 +7,12 @@ using Teleport.patches;
 namespace Teleport
 {
     [BepInPlugin(modGUID, modName, modVersion)]
+    [BepInDependency("officerballs.StatusManager", BepInDependency.DependencyFlags.SoftDependency)]   
     public class Plugin : BaseUnityPlugin
     {
         public const string modGUID = "officerballs.Teleport";
         public const string modName = "Teleport";
-        public const string modVersion = "1.0.2.0";
+        public const string modVersion = "1.1.0.0";
 
         private Harmony harmony = new Harmony(modGUID);
 
@@ -18,9 +20,11 @@ namespace Teleport
 
         void Awake()
         {
+            harmony.PatchAll(typeof(TeleportPatch));
+            harmony.PatchAll(typeof(Teleporter));
+
             mls.LogInfo("Teleportation system loaded.");
             
-            harmony.PatchAll(typeof(TeleportPatch));
         }
 
     }
