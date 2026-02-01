@@ -1,4 +1,4 @@
-﻿using BepInEx;
+using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
 using MoveTweaks.patches;
@@ -10,7 +10,7 @@ namespace MoveTweaks
     {
         public const string modGUID = "officerballs.MoveTweaks";
         public const string modName = "MoveTweaks";
-        public const string modVersion = "1.0.0.0";
+        public const string modVersion = "1.0.1.0";
 
         private Harmony harmony = new Harmony(modGUID);
 
@@ -20,6 +20,7 @@ namespace MoveTweaks
         {
             mls.LogInfo("Movement tweaks loaded.");
             
+            harmony.PatchAll(typeof(AddModdedTag));
             harmony.PatchAll(typeof(SprintX));
             harmony.PatchAll(typeof(SprintY));
             harmony.PatchAll(typeof(MovementPatch));
