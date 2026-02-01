@@ -10,6 +10,7 @@ namespace StatusMessage
     public class Plugin : BaseUnityPlugin
     {
         public static ConfigEntry<string> configNameBase  { get; private set; }
+
         public static ConfigEntry<string> configBracketType { get; private set; }
         public static ConfigEntry<string> configCustomColor { get; private set; }
 
@@ -23,11 +24,22 @@ namespace StatusMessage
         public static ConfigEntry<string> configAFKMessage  { get; private set; }
         public static ConfigEntry<string> configAFKColor { get; private set; }
 
+
+        public static ConfigEntry<bool> configUseGradient { get; private set; }
+        public static ConfigEntry<int> configGradientBuffer { get; private set; }
+        public static ConfigEntry<bool> configScrollingGradient { get; private set; }
+        public static ConfigEntry<bool> configUseThirdColor { get; private set; }
+        public static ConfigEntry<string> configGradientColor1 { get; private set; }
+        public static ConfigEntry<string> configGradientColor2 { get; private set; }
+        public static ConfigEntry<string> configGradientColor3 { get; private set; }
+
+        public static bool active = false;
+
         
 
         public const string modGUID = "officerballs.StatusManager";
         public const string modName = "Status Manager";
-        public const string modVersion = "1.0.2.0";
+        public const string modVersion = "1.1.0.0";
 
         private Harmony harmony = new Harmony(modGUID);
 
@@ -42,14 +54,19 @@ namespace StatusMessage
             harmony.PatchAll(typeof(CharLimitPatch));
             
             string playername = "";
-            //if (!string.IsNullOrEmpty(MonoSingleton<DataManager>.I.PlayerData.Name))
-            //{
-            //    playername = MonoSingleton<DataManager>.I.PlayerData.Name;
-            //}
-            configNameBase = Config.Bind("General", "PlayerName", playername, "Your player's name.");
             configBracketType = Config.Bind("General", "BracketType", "()", "How your status messages are wrapped. Two character limit.");
             configCustomColor = Config.Bind("General", "CustomColor", "5ec1c7", "Colorcode to wrap custom status with.");
+            configNameBase = Config.Bind("General", "PlayerName", playername, "Your player's name.");
             
+            configUseGradient = Config.Bind("General.Gradient", "UseGradient", false, "Toggle gradient mode on or off.");
+
+            configScrollingGradient = Config.Bind("General.Gradient", "ScrollingGradient", false, "Toggle gradient auto-scrolling. Can't use with UseThirdColor.");
+            configUseThirdColor = Config.Bind("General.Gradient", "UseThirdColor", false, "Use three gradient colors. Can't use with ScrollingGradient.");
+            configGradientColor1 = Config.Bind("General.Gradient", "GradientColor1", "4394b0", "First gradient color.");
+            configGradientColor2 = Config.Bind("General.Gradient", "GradientColor2", "ce6c9f", "Second gradient color.");
+            configGradientColor3 = Config.Bind("General.Gradient", "GradientColor3", "ffd45d", "Third gradient color (only available for non-scrolling).");
+            configGradientBuffer = Config.Bind("General.Gradient", "GradientBuffer", 0, "Additional length buffer for gradients. Limited 0-32.");
+
             configUseBRB = Config.Bind("General.BRB", "UseBRB", true, "Enables auto-BRB system.");
             configBRBTimer = Config.Bind("General.BRB", "BRBTimer", 2, "Time in minutes before BRB applies. Must be lower than AFK timer if that's enabled.");
             configBRBMessage = Config.Bind("General.BRB", "BRBMessage", "BRB", "Text for the BRB status.");
@@ -60,13 +77,9 @@ namespace StatusMessage
             configAFKMessage = Config.Bind("General.AFK", "AFKMessage", "AFK", "Text for the AFK status.");
             configAFKColor = Config.Bind("General.AFK", "AFKColor", "e97d45", "Colorcode to wrap AFK status with.");
 
-            
-            
-            //configUseBRB configBRBTimer configBRBMessage
-            //configUseAFK configBRBTimer configBRBMessage
+        
             mls.LogInfo("Status Management system online.");
         }
 
     }
 }
-
