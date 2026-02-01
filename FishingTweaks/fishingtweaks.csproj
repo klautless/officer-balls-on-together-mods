@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net46</TargetFramework>
     <AssemblyName>officerballs.FishingTweaks</AssemblyName>
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <RootNamespace>FishingTweaks</RootNamespace>
@@ -32,3 +32,4 @@
     <Content Include="patches\fishingtweaks.cs" />
   </ItemGroup>
 </Project>
+
