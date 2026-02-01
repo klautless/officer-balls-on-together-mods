@@ -33,6 +33,7 @@ check commands in game with /help any time.
 /help gradient - gives information on the gradient commands.  
 /usegradient - toggles the gradient system. default: disabled.  
 ***make sure your username has no color tags already! do /setname to a decolored name first.***  
+/gradientstretch xx (0-64) - spreads out the gradiation. default: 0.  
 /gradientthree - toggles the third gradient color. default: disabled.  
 /gradientscroll - toggles the scrolling color effect. default: disabled.  
 /gradientcolor x 123456 - sets the gradient color (1, 2, or 3) to a hex color. defaults vary by number.  
