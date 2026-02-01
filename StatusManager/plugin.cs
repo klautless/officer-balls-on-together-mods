@@ -39,7 +39,7 @@ namespace StatusMessage
 
         public const string modGUID = "officerballs.StatusManager";
         public const string modName = "Status Manager";
-        public const string modVersion = "1.1.0.0";
+        public const string modVersion = "1.1.1.0";
 
         private Harmony harmony = new Harmony(modGUID);
 
@@ -49,6 +49,7 @@ namespace StatusMessage
 
         void Awake()
         {
+            harmony.PatchAll(typeof(AddModdedTag));
             harmony.PatchAll(typeof(StatusPatch));
             harmony.PatchAll(typeof(RevertNamePatch));
             harmony.PatchAll(typeof(CharLimitPatch));
