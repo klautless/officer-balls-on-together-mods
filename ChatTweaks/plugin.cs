@@ -1,4 +1,4 @@
-﻿using BepInEx;
+using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
@@ -21,7 +21,7 @@ namespace ChatTweaks
 
         public const string modGUID = "officerballs.chatTweaks";
         public const string modName = "Chat Tweaks";
-        public const string modVersion = "1.0.6.0";
+        public const string modVersion = "1.0.7.0";
 
         private Harmony harmony = new Harmony(modGUID);
 
@@ -31,6 +31,7 @@ namespace ChatTweaks
 
         void Awake()
         {
+            harmony.PatchAll(typeof(AddModdedTag));
             harmony.PatchAll(typeof(UIManagerPatch));
             harmony.PatchAll(typeof(TextPatcher));
             harmony.PatchAll(typeof(PlayerPanelPatch));
