@@ -402,6 +402,19 @@ namespace StatusMessage.patches
                 switch (commandcheck)
                 {
                     case "/usegradient":
+                        if (Plugin.configUseGradient.Value)
+                        {
+                            switch(CheckName(Plugin.configNameBase.Value))
+                            {
+                                case true:
+                                    break;
+                                case false:
+                                    Notify("Gradient names can't use tags.");
+                                    Notify("/setname to a tagless name first.");
+                                    ResetPostMessage();
+                                    return false;
+                            }
+                        }
                         Plugin.configUseGradient.Value = !Plugin.configUseGradient.Value;
                         string usegrad = Plugin.configUseGradient.Value ? "on" : "off";
                         Notify("Gradients turned " + usegrad);
@@ -537,8 +550,20 @@ namespace StatusMessage.patches
                 {
                     if (text.Length > 9)
                     {
-
+                        
                         string newname = text.Substring(9); //gradientReady? ApplyGradient(text.Substring(9)) : text.Substring(9);
+                        if (Plugin.configUseGradient.Value)
+                        {
+                            switch(CheckName(newname))
+                            {
+                                case true:
+                                    break;
+                                case false:
+                                    Notify("Gradient names can't use tags.");
+                                    ResetPostMessage();
+                                    return false;
+                            }
+                        }
                         if (gradientReady) gradientReady = false;
                         Plugin.configNameBase.Value = newname;
                         Notify("Name changed to " + newname + ".");
@@ -736,6 +761,19 @@ namespace StatusMessage.patches
                 }
                 catch (NullReferenceException) {}
             }
+        }
+        public static bool CheckName( string name )
+        {
+            char[] chars = name.ToCharArray();
+            bool prefound = false;
+            bool postfound = false;
+            foreach (char c in chars)
+            {
+                if (c == '<') prefound = true;
+                if (c == '>') postfound = true;
+            }
+            if (prefound && postfound) return false;
+            return true;
         }
 
         [HarmonyPatch("SendMessageAsync")]
