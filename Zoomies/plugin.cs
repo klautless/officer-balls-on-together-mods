@@ -1,11 +1,6 @@
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Zoomies.patches;
 namespace Zoomies
 {
@@ -14,7 +9,7 @@ namespace Zoomies
     {
         public const string modGUID = "officerballs.Zoomies";
         public const string modName = "Zoomies";
-        public const string modVersion = "1.0.0.0";
+        public const string modVersion = "1.0.1.0";
 
         private Harmony harmony = new Harmony(modGUID);
 
@@ -26,6 +21,7 @@ namespace Zoomies
         {
             mls.LogInfo("Zooming tweaked.");
             
+            harmony.PatchAll(typeof(AddModdedTag));
             harmony.PatchAll(typeof(ZoomPatch));
         }
 
