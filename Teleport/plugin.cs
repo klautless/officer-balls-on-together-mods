@@ -7,12 +7,12 @@ using Teleport.patches;
 namespace Teleport
 {
     [BepInPlugin(modGUID, modName, modVersion)]
-    [BepInDependency("officerballs.StatusManager", BepInDependency.DependencyFlags.SoftDependency)]   
+    [BepInDependency("officerballs.StatusManager", "1.1.0.0")]   
     public class Plugin : BaseUnityPlugin
     {
         public const string modGUID = "officerballs.Teleport";
         public const string modName = "Teleport";
-        public const string modVersion = "1.1.0.0";
+        public const string modVersion = "1.1.1.0";
 
         private Harmony harmony = new Harmony(modGUID);
 
@@ -20,6 +20,7 @@ namespace Teleport
 
         void Awake()
         {
+            harmony.PatchAll(typeof(AddModdedTag));
             harmony.PatchAll(typeof(TeleportPatch));
             harmony.PatchAll(typeof(Teleporter));
 
