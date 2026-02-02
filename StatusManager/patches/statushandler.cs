@@ -6,7 +6,13 @@ using HarmonyLib;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using TMPro;
+using PurrNet;
+using Steamworks;
+using PurrNet.Modules;
+using PurrNet.Packing;
+using PurrNet.Transports;
 using PurrLobby;
+using System.Reflection;
 
 namespace StatusMessage.patches
 {
@@ -74,6 +80,8 @@ namespace StatusMessage.patches
                 
             }
 
+            //scrolling is disabled for now
+            if (Plugin.configScrollingGradient.Value) Plugin.configScrollingGradient.Value = false;
             if(Plugin.configUseGradient.Value && Plugin.configScrollingGradient.Value && gradientReady)
             {
                 nameTimer += Time.deltaTime;
@@ -280,8 +288,9 @@ namespace StatusMessage.patches
                 string scrollOnOff = Plugin.configScrollingGradient.Value ? "on" : "off";
                 rollingOffset = 0;
                 if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
-                Notify("Scrolling gradient turned " + scrollOnOff);
-                EmitUpdate();
+                //Notify("Scrolling gradient turned " + scrollOnOff);
+                //EmitUpdate();
+                Notify("Scrolling gradients are currently disabled, sorry!");
                 ResetPostMessage();
                 return false;
             }
@@ -743,7 +752,9 @@ namespace StatusMessage.patches
             EventSystem.current.SetSelectedGameObject(null);
             if(!skiptext) MonoSingleton<UIManager>.I.MessageInput.text = "";
         }
-        public static void EmitUpdate()
+
+        [ServerRpc(Channel.UnreliableSequenced, false, true, PurrNet.CompressionLevel.None, 5f, StripCodeModeOverride.Settings)]
+	    public static void EmitUpdate()
         {
             if (MonoSingleton<MainSceneManager>.I != null)
             {
@@ -760,6 +771,7 @@ namespace StatusMessage.patches
                     }
                 }
                 catch (NullReferenceException) {}
+                
             }
         }
         public static bool CheckName( string name )
@@ -786,6 +798,14 @@ namespace StatusMessage.patches
                 return false;
             }
             return true;
+        }
+    }
+    public static class SSS
+    {
+        public static T GetMethodWithoutOverrides<T>(this MethodInfo method, object callFrom) where T : Delegate
+        {
+            IntPtr ptr = method.MethodHandle.GetFunctionPointer();
+            return (T)Activator.CreateInstance(typeof(T), callFrom, ptr);
         }
     }
 }
