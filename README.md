@@ -19,20 +19,18 @@ Use /help chat in game for customization options.
 - Bubblegum is no longer consumed when used.  
   
 ***PlayerLimitLift*** - increase maximum server size to 128 players.  
-*Fixes to the text channel manager provided by/adapted from 岚风 雷 / Arashi_Lei*  
+*Fixes to the text channel manager provided by/adapted from 岚风 雷 / Arashi_Lei (https://github.com/gqxastg)*  
 
 ***Status Manager***  
-adds an auto-brb + auto-afk system, custom status messages, lots of flexibility!  
+adds an auto-brb + auto-afk system, custom status messages, gradients, lots of flexibility!  
   
-check commands in game with /help status any time.  
+check commands in game with /help status and /help gradient any time.  
 full readme in directory!  
 
 ***Teleport*** - Allows you to warp to other players in the server.  
 Hotkeys:  
-- Shift + Q / Shift + E -> rotate through players in the server.
-- Shift + X -> Teleport to selected player.
-
-* *Known issue: If a player is too far out of range teleportation will fail; haven't yet researched whether they are unloaded or if transform updates aren't reported outside of a given range.*  
+- Shift + scroll -> rotate through players in the server.
+- Shift + e -> Teleport to selected player. 
   
 ***Zoomies*** - simple mod that increases the maximum zoom distance.  
   
