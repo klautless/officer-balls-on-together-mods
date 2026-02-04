@@ -1,13 +1,4 @@
-using BepInEx;
-using BepInEx.Logging;
-using DG.Tweening;
 using HarmonyLib;
-using TMPro;
-using UnityEngine;
-using UnityEngine.PlayerLoop;
-using UnityEngine.EventSystems;
-using UnityEngine.Rendering;
-using UnityEngine.UI;
 
 namespace Zoomies.patches
 {
