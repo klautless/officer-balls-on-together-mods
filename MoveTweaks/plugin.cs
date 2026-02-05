@@ -10,7 +10,7 @@ namespace MoveTweaks
     {
         public const string modGUID = "officerballs.MoveTweaks";
         public const string modName = "MoveTweaks";
-        public const string modVersion = "1.0.1.0";
+        public const string modVersion = "1.0.2.0";
 
         private Harmony harmony = new Harmony(modGUID);
 
