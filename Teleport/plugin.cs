@@ -12,7 +12,7 @@ namespace Teleport
     {
         public const string modGUID = "officerballs.Teleport";
         public const string modName = "Teleport";
-        public const string modVersion = "1.1.1.0";
+        public const string modVersion = "1.1.2.0";
 
         private Harmony harmony = new Harmony(modGUID);
 
@@ -22,6 +22,7 @@ namespace Teleport
         {
             harmony.PatchAll(typeof(AddModdedTag));
             harmony.PatchAll(typeof(TeleportPatch));
+            harmony.PatchAll(typeof(PCPatcher));
             harmony.PatchAll(typeof(Teleporter));
 
             mls.LogInfo("Teleportation system loaded.");
