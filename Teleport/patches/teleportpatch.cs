@@ -4,11 +4,8 @@ using TMPro;
 using UnityEngine;
 using BepInEx.Bootstrap;
 using StatusMessage.patches;
-using PurrNet;
-using PurrNet.Modules;
-using PurrNet.Packing;
-using PurrNet.Transports;
 using UnityEngine.InputSystem;
+using System;
 
 namespace Teleport.patches
 {
@@ -91,15 +88,19 @@ namespace Teleport.patches
             return;
 
             changed:
+                target = null;
                 for (var i = 0; i < 2; i++)
                 {
                     if (index < 0) index = NetworkSingleton<PlayerPanelController>.I.PlayerIDs.Count - 1;
                     else if (index >= NetworkSingleton<PlayerPanelController>.I.PlayerIDs.Count ) index = 0;
-                    target = NetworkSingleton<PlayerPanelController>.I.PlayerTransforms[index].GetComponent<PlayerController>();
                     
                     var tar_id = NetworkSingleton<PlayerPanelController>.I.PlayerIDs[index];
                     var self_id = NetworkSingleton<TextChannelManager>.I.localPlayer;
-                    if (tar_id != self_id) break;
+                    if (tar_id != self_id)
+                    {
+                        target = NetworkSingleton<PlayerPanelController>.I.PlayerTransforms[index].GetComponent<PlayerController>();
+                        break;
+                    }
                     if (tempdigit == 1) index+=1;
                     else if (tempdigit == -1) index-=1;
                 
@@ -108,11 +109,16 @@ namespace Teleport.patches
                 var nameinstance = MonoSingleton<UIManager>.I;
                 var playname = MonoSingleton<DataManager>.I.PlayerData.Name;
 
-                //int num = NetworkSingleton<PlayerPanelController>.I.PlayerIDs.IndexOf(info.sender);
-		        target = NetworkSingleton<PlayerPanelController>.I.PlayerTransforms[index].GetComponent<PlayerController>();
-                var tname = target.PlayerNameText.text;
                 
-                targetingString = "            -            " + tname + " selected";
+                if (target!=null)
+                {
+                    var tname = target.PlayerNameText.text;
+                    targetingString = "            -            " + tname + " selected";
+                }
+                else
+                {
+                    targetingString = "";
+                }
                 if (Chainloader.PluginInfos.TryGetValue("officerballs.StatusManager", out var basicInfo))
                 {
                     StatusPatch._ifTeleportString = targetingString;
@@ -125,7 +131,11 @@ namespace Teleport.patches
                 {
                     var controller = target.transform.GetComponentInChildren<PlayerMovementController>() as PlayerMovementController;
                     Teleporter.warppos = controller.transform.position;
-                    //NetworkSingleton<TextChannelManager>.I.MainPlayer.position = controller.transform.position;
+                    
+                    NetworkSingleton<TextChannelManager>.I.MainPlayer.position = controller.transform.position;
+                    // left in as a failsafe for sitting still, focusing, etc
+                    
+                    
                     //Debug.Log("warped?");
 
                     //Debug.Log(target.transform.GetComponentInChildren<PlayerMovementController>());
@@ -139,14 +149,37 @@ namespace Teleport.patches
         [HarmonyPostfix]
         static public void DespawnHandlePatch( PlayerPanelController __instance)
         {
+            target = null;
             if (index >= __instance.PlayerSteamIDs.Count) index = __instance.PlayerSteamIDs.Count - 1;
-            target = NetworkSingleton<PlayerPanelController>.I.PlayerTransforms[index].GetComponent<PlayerController>();
+            for (var i = 0; i < 2; i++)
+                {
+                    if (index < 0) index = NetworkSingleton<PlayerPanelController>.I.PlayerIDs.Count - 1;
+                    else if (index >= NetworkSingleton<PlayerPanelController>.I.PlayerIDs.Count ) index = 0;
+                    
+                    var tar_id = NetworkSingleton<PlayerPanelController>.I.PlayerIDs[index];
+                    var self_id = NetworkSingleton<TextChannelManager>.I.localPlayer;
+                    if (tar_id != self_id)
+                    {
+                        target = NetworkSingleton<PlayerPanelController>.I.PlayerTransforms[index].GetComponent<PlayerController>();
+                        break;
+                    }
+                    index-=1;
+                
+                }
             var namefieldRef = AccessTools.FieldRefAccess<UIManager, TextMeshProUGUI>("_playerText");
             var nameinstance = MonoSingleton<UIManager>.I;
             var playname = MonoSingleton<DataManager>.I.PlayerData.Name;
 
-            var tname = target.PlayerNameText.text;
-            targetingString = "            -            " + tname + " selected";
+            
+            if (target!=null)
+            {
+                var tname = target.PlayerNameText.text;
+                targetingString = "            -            " + tname + " selected";
+            }
+            else
+            {
+                targetingString = "";
+            }
             if (Chainloader.PluginInfos.TryGetValue("officerballs.StatusManager", out var basicInfo))
             {
                 StatusPatch._ifTeleportString = targetingString;
@@ -176,5 +209,25 @@ namespace Teleport.patches
             return true;
         }
 
+    }
+    [HarmonyPatch(typeof(PlayerController))]
+    public static class PCPatcher
+    {
+        [HarmonyPatch("OnDespawned")]
+        [HarmonyPrefix]
+        public static bool OverrideStationaryCheck( PlayerController __instance)
+        {
+            if(__instance.IsReturningMenu)
+            {
+                TeleportPatch.target = null;
+                TeleportPatch.targetingString = "";
+                if (Chainloader.PluginInfos.TryGetValue("officerballs.StatusManager", out var basicInfo))
+                {
+                    StatusPatch._ifTeleportString = TeleportPatch.targetingString;
+                }
+            }
+
+            return true;
+        }
     }
 }
