@@ -6,11 +6,6 @@ using HarmonyLib;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using TMPro;
-using PurrNet;
-using Steamworks;
-using PurrNet.Modules;
-using PurrNet.Packing;
-using PurrNet.Transports;
 using PurrLobby;
 using System.Reflection;
 
@@ -30,7 +25,6 @@ namespace StatusMessage.patches
         [HarmonyPrefix]
         public static void TimeChecker()
         {
-
             if (Input.anyKey)
             {
                 bool changed = false;
@@ -48,41 +42,42 @@ namespace StatusMessage.patches
                 if (changed)
                 {
                     if (gradientReady) gradientReady = false;
-                    SetName("basic");
                     if (Plugin.configScrollingGradient.Value) rollingOffset = 0;
-                    if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+                    SendSetName();
                     EmitUpdate();
-                    
                 }
-            }
-            else
-            {
-                awaytimer += Time.deltaTime;
             }
             if(awaytimer >= Plugin.configAFKTimer.Value * 60 && statusmsg == "" && !isAFK && Plugin.configUseAFK.Value)
             {
                 isAFK = true;
                 if (gradientReady) gradientReady = false;
-                SetName("afk");
-                if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+                SendSetName();
                 EmitUpdate();
-                
-                
             }
             else if(awaytimer >= Plugin.configBRBTimer.Value * 60 && statusmsg == "" && !isBRB && Plugin.configUseBRB.Value)
             {
                 isBRB = true;
                 if (gradientReady) gradientReady = false;
-                SetName("brb");
-
-                if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+                SendSetName();
                 EmitUpdate();
-                
             }
-
-            //scrolling is disabled for now
-            if (Plugin.configScrollingGradient.Value) Plugin.configScrollingGradient.Value = false;
-            if(Plugin.configUseGradient.Value && Plugin.configScrollingGradient.Value && gradientReady)
+            else if (   (Plugin.configUseAFK.Value && !isAFK) || 
+                        (Plugin.configUseBRB.Value && ( !isBRB &&
+                            (!Plugin.configUseAFK.Value || ( Plugin.configUseAFK.Value && !isAFK)))))
+            {
+                awaytimer += Time.deltaTime;
+            }
+            if (UpdateDelayer > 0)
+            {
+                UpdateDelayer -= Time.deltaTime;
+                if (UpdateDelayer <= 0)
+                {
+                    EmitUpdate();
+                }
+                return;
+            }
+            return; // no scrolling gradients for now
+            /*if(Plugin.configUseGradient.Value && Plugin.configScrollingGradient.Value && gradientReady)
             {
                 nameTimer += Time.deltaTime;
                 if (nameTimer > tickRate)
@@ -112,7 +107,7 @@ namespace StatusMessage.patches
                     }
                     CheckChangeTickrate();
                 }
-            }
+            }*/
         }
         public static int nameLen;
         public static int rollingOffset = 0;
@@ -138,7 +133,7 @@ namespace StatusMessage.patches
             colorlist.Clear();
             if(!Plugin.configScrollingGradient.Value)
             {
-                if(!Plugin.configUseThirdColor.Value)
+                if(!Plugin.configUseThirdColor.Value) //still, two color
                 {
                     for (var i = 0; i < nameLen; i++)
                     {
@@ -149,7 +144,7 @@ namespace StatusMessage.patches
                         colorlist.Add(final);
                     }
                 }
-                else
+                else //still, three color
                 {
                     int halfway = (int)Math.Ceiling((double)nameLen / 2);
                     if( halfway < 1) halfway = 1;
@@ -174,25 +169,57 @@ namespace StatusMessage.patches
             }
             else
             {
-                int halfway = (int)Math.Ceiling((double)nameLen / 2);
-                if( halfway < 1) halfway = 1;
-                for (var i = 0; i < halfway; i++)
+                if(!Plugin.configUseThirdColor.Value) //scrolling, two color
                 {
-                    string r = ColorSnap(r_one + (int)((r_two - r_one) * i / halfway)).ToString("x2");
-                    string g = ColorSnap(g_one + (int)((g_two - g_one) * i / halfway)).ToString("x2");
-                    string b = ColorSnap(b_one + (int)((b_two - b_one) * i / halfway)).ToString("x2");
-                    string final = r + g + b;
-                    colorlist.Add(final);
-
+                    int halfway = (int)Math.Ceiling((double)nameLen / 2);
+                    if( halfway < 1) halfway = 1;
+                    for (var i = 0; i < halfway; i++)
+                    {
+                        string r = ColorSnap(r_one + (int)((r_two - r_one) * i / halfway)).ToString("x2");
+                        string g = ColorSnap(g_one + (int)((g_two - g_one) * i / halfway)).ToString("x2");
+                        string b = ColorSnap(b_one + (int)((b_two - b_one) * i / halfway)).ToString("x2");
+                        string final = r + g + b;
+                        colorlist.Add(final);
+                    }
+                    int secondhalf = nameLen - halfway > 0 ? nameLen - halfway : 1;
+                    for (var i = 0; i < secondhalf; i++)
+                    {
+                        string r = ColorSnap(r_two + (int)((r_one - r_two) * i / halfway)).ToString("x2");
+                        string g = ColorSnap(g_two + (int)((g_one - g_two) * i / halfway)).ToString("x2");
+                        string b = ColorSnap(b_two + (int)((b_one - b_two) * i / halfway)).ToString("x2");
+                        string final = r + g + b;
+                        colorlist.Add(final);
+                    }
                 }
-                int secondhalf = nameLen - halfway > 0 ? nameLen - halfway : 1;
-                for (var i = 0; i < secondhalf; i++)
+                else // scrolling, three color
                 {
-                    string r = ColorSnap(r_two + (int)((r_one - r_two) * i / halfway)).ToString("x2");
-                    string g = ColorSnap(g_two + (int)((g_one - g_two) * i / halfway)).ToString("x2");
-                    string b = ColorSnap(b_two + (int)((b_one - b_two) * i / halfway)).ToString("x2");
-                    string final = r + g + b;
-                    colorlist.Add(final);
+                    int onethird = (int)Math.Ceiling((double)nameLen / 3);
+                    if( onethird < 1) onethird = 1;
+                    for (var i = 0; i < onethird; i++)
+                    {
+                        string r = ColorSnap(r_one + (int)((r_two - r_one) * i / onethird)).ToString("x2");
+                        string g = ColorSnap(g_one + (int)((g_two - g_one) * i / onethird)).ToString("x2");
+                        string b = ColorSnap(b_one + (int)((b_two - b_one) * i / onethird)).ToString("x2");
+                        string final = r + g + b;
+                        colorlist.Add(final);
+                    }
+                    for (var i = 0; i < onethird; i++)
+                    {
+                        string r = ColorSnap(r_two + (int)((r_three - r_two) * i / onethird)).ToString("x2");
+                        string g = ColorSnap(g_two + (int)((g_three - g_two) * i / onethird)).ToString("x2");
+                        string b = ColorSnap(b_two + (int)((b_three - b_two) * i / onethird)).ToString("x2");
+                        string final = r + g + b;
+                        colorlist.Add(final);
+                    }
+                    int closer = nameLen - (2 * onethird) > 0 ? nameLen - (2 * onethird) : 1;
+                    for (var i = 0; i < closer; i++)
+                    {
+                        string r = ColorSnap(r_three + (int)((r_one - r_three) * i / onethird)).ToString("x2");
+                        string g = ColorSnap(g_three + (int)((g_one - g_three) * i / onethird)).ToString("x2");
+                        string b = ColorSnap(b_three + (int)((b_one - b_three) * i / onethird)).ToString("x2");
+                        string final = r + g + b;
+                        colorlist.Add(final);
+                    }
                 }
             }
             if(colorlist.Count > 0)
@@ -210,7 +237,7 @@ namespace StatusMessage.patches
             {
             LobbyManager lobbyManager = MonoSingleton<MultiplayerManager>.I._lobbyManager;
             int cur = lobbyManager.CurrentLobby.Members.Count;
-            int roundup = (int)Math.Ceiling((double)cur / 16);
+            int roundup = cur > 16 ? (int)Math.Ceiling((double)cur / 6) : 1;
             tickRate = 0.0625f * roundup;
             }
             catch (NullReferenceException) {}
@@ -220,16 +247,24 @@ namespace StatusMessage.patches
             if (!gradientReady) return "";
             name = name.Trim();
             string nametotal = "";
-            char[] chars = name.ToCharArray();
-            for (int c = 0; c < chars.Count(); c++)
+            if (Plugin.configScrollStyle.Value)
             {
-                int colorIndex = c + rollingOffset;
+                int colorIndex = rollingOffset;
                 if (colorIndex >= colorlist.Count()) colorIndex -= colorlist.Count();
                 if (colorIndex < 0) colorIndex = 0;
-                //Debug.Log("Debug:" + colorIndex.ToString() + ", " + colorlist.Count().ToString() + "; " + c.ToString() + ", " + chars.Count().ToString() + ".");
-
-                string a = "<color=#" + colorlist[colorIndex] + ">" + chars[c].ToString() + "</color>";
-                nametotal += a;
+                nametotal = "<#" + colorlist[colorIndex] + ">" + name + "</color>";
+            }
+            else
+            {
+                char[] chars = name.ToCharArray();
+                for (int c = 0; c < chars.Count(); c++)
+                {
+                    int colorIndex = c + rollingOffset;
+                    if (colorIndex >= colorlist.Count()) colorIndex -= colorlist.Count();
+                    if (colorIndex < 0) colorIndex = 0;
+                    string a = "<#" + colorlist[colorIndex] + ">" + chars[c].ToString() + "</color>";
+                    nametotal += a;
+                }
             }
             return nametotal;
         }
@@ -252,6 +287,17 @@ namespace StatusMessage.patches
                 Notify("/help gradient for commands to control gradients");
                 return true;
             }
+            if (text == "/gradientscrollstyle" && false) // not currently enabled
+            {
+                gradientReady = false;
+                Plugin.configScrollStyle.Value = !Plugin.configScrollStyle.Value;
+                rollingOffset = 0;
+                SendSetName();
+                Notify("Gradient scroll style swapped.");
+                EmitUpdate();
+                ResetPostMessage();
+                return false;
+            }
             if (text.Length >= 15) // /changebrackets @ 15
             {
                 if (text.Substring(0,15) == "/changebrackets")
@@ -262,9 +308,8 @@ namespace StatusMessage.patches
                         if (statusmsg != "")
                         {
                             if (gradientReady) gradientReady = false;
-                            SetName("status");
                             if (Plugin.configScrollingGradient.Value) rollingOffset = 0;
-                            if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+                            SendSetName();
                             EmitUpdate();
                         }
                         Notify("Brackets changed to " + Plugin.configBracketType.Value);
@@ -273,24 +318,21 @@ namespace StatusMessage.patches
                     {
                         Notify("Brackets currently set to " + Plugin.configBracketType.Value);
                     }
-
                     ResetPostMessage();
                     return false;
-
-                    
                 }
             }
-            if (text == "/gradientscroll")
+            if (text == "/gradientscroll" && false) // currently disabled
             {
                 gradientReady = false;
                 Plugin.configScrollingGradient.Value = !Plugin.configScrollingGradient.Value;
-                if(Plugin.configScrollingGradient.Value) Plugin.configUseThirdColor.Value = !Plugin.configScrollingGradient.Value;
+                //if(Plugin.configScrollingGradient.Value) Plugin.configUseThirdColor.Value = !Plugin.configScrollingGradient.Value;
                 string scrollOnOff = Plugin.configScrollingGradient.Value ? "on" : "off";
                 rollingOffset = 0;
-                if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+                SendSetName();
                 //Notify("Scrolling gradient turned " + scrollOnOff);
-                //EmitUpdate();
-                Notify("Scrolling gradients are currently disabled, sorry!");
+                EmitUpdate();
+                //Notify("Scrolling gradients are currently disabled, sorry!");
                 ResetPostMessage();
                 return false;
             }
@@ -298,14 +340,21 @@ namespace StatusMessage.patches
             {
                 if (text.Substring(0,16) == "/gradientstretch")
                 {
-                    if(int.TryParse(text.Substring(17), out int index))
-                    {
-                        if (index < 0) index = 0;
-                        else if (index > 64) index = 64;
-                        Plugin.configGradientBuffer.Value = index;
-                        Notify("Gradient buffer size set to " + index.ToString() + ".");
-                        if (Plugin.configScrollingGradient.Value) rollingOffset = 0;
-                        if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+                    if( text.Length >= 17)
+                    {    
+                        if(int.TryParse(text.Substring(17), out int index))
+                        {
+                            if (index < 0) index = 0;
+                            else if (index > 128) index = 128;
+                            Plugin.configGradientBuffer.Value = index;
+                            Notify("Gradient buffer size set to " + index.ToString() + ".");
+                            if (Plugin.configScrollingGradient.Value) rollingOffset = 0;
+                            SendSetName();
+                        }
+                        else
+                        {
+                            Notify("Gradient buffer size currently set to " + Plugin.configGradientBuffer.Value.ToString() + ".");
+                        }
                     }
                     else
                     {
@@ -333,7 +382,7 @@ namespace StatusMessage.patches
                                         gradientReady = false;
                                         Plugin.configGradientColor1.Value = text.Substring(17,6);
                                         if (Plugin.configScrollingGradient.Value) rollingOffset = 0;
-                                        if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+                                        SendSetName();
                                         Notify("Gradient color 1 set to <color=#" + Plugin.configGradientColor1.Value + ">" + Plugin.configGradientColor1.Value + "</color>.");
                                     }
                                     else
@@ -348,7 +397,7 @@ namespace StatusMessage.patches
                                         gradientReady = false;
                                         Plugin.configGradientColor2.Value = text.Substring(17,6);
                                         if (Plugin.configScrollingGradient.Value) rollingOffset = 0;
-                                        if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+                                        SendSetName();
                                         Notify("Gradient color 2 set to <color=#" + Plugin.configGradientColor2.Value + ">" + Plugin.configGradientColor2.Value + "</color>.");
                                     }
                                     else
@@ -363,7 +412,7 @@ namespace StatusMessage.patches
                                         gradientReady = false;
                                         Plugin.configGradientColor3.Value = text.Substring(17,6);
                                         if (Plugin.configScrollingGradient.Value) rollingOffset = 0;
-                                        if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+                                        SendSetName();
                                         Notify("Gradient color 3 set to <color=#" + Plugin.configGradientColor3.Value + ">" + Plugin.configGradientColor3.Value + "</color>.");
                                     }
                                     else
@@ -376,7 +425,6 @@ namespace StatusMessage.patches
                                     Notify("Must specify a number 1 - 3 and a color.");
                                     Notify("example: /gradientcolor 1 123456");
                                 }
-
                             }
                             else
                             {
@@ -396,9 +444,9 @@ namespace StatusMessage.patches
                         gradientReady = false;
                         Plugin.configUseThirdColor.Value = !Plugin.configUseThirdColor.Value;
                         string threeonoff = Plugin.configUseThirdColor.Value ? "on" : "off";
-                        if (Plugin.configUseThirdColor.Value) Plugin.configScrollingGradient.Value = !Plugin.configUseThirdColor.Value;
+                        //if (Plugin.configUseThirdColor.Value) Plugin.configScrollingGradient.Value = !Plugin.configUseThirdColor.Value;
                         rollingOffset = 0;
-                        if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+                        SendSetName();
                         Notify("Gradient 3 turned " + threeonoff);
                         EmitUpdate();
                         ResetPostMessage();
@@ -427,28 +475,19 @@ namespace StatusMessage.patches
                         Plugin.configUseGradient.Value = !Plugin.configUseGradient.Value;
                         string usegrad = Plugin.configUseGradient.Value ? "on" : "off";
                         Notify("Gradients turned " + usegrad);
-                        if (Plugin.configScrollingGradient.Value) rollingOffset = 0;                
-                        if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
-                        else
-                        {
-                            gradientReady = false;
-                            SetName("basic");
-                        }
-
+                        if (Plugin.configScrollingGradient.Value) rollingOffset = 0;
+                        SendSetName();
                         EmitUpdate();
                         ResetPostMessage();
-
                         return false;
                     case "/clearstatus":
                         statusmsg = "";
                         if (gradientReady) gradientReady = false;
-                        SetName("basic");
                         if (Plugin.configScrollingGradient.Value) rollingOffset = 0;
-                        if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+                        SendSetName();
                         EmitUpdate();
                         ResetPostMessage();
                         Notify("Status message cleared.");
-                    
                         return false;
                     case "/statuscolor":
                         if (text.Length >= 19)
@@ -458,13 +497,11 @@ namespace StatusMessage.patches
                             if (statusmsg != "")
                             {
                                 if (gradientReady) gradientReady = false;
-                                SetName("status");
                                 if (Plugin.configScrollingGradient.Value) rollingOffset = 0;
-                                if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+                                SendSetName();
                                 EmitUpdate();
                                 Notify("Status color changed to <color=#" + Plugin.configCustomColor.Value + ">" + Plugin.configCustomColor.Value + "</color>.");
                             }
-                            
                         }
                         else
                         {
@@ -485,7 +522,6 @@ namespace StatusMessage.patches
                     {
                         color = text.Substring(10,6);
                         Plugin.configBRBColor.Value = color;
-
                         ResetPostMessage();
                         Notify("BRB color changed to <color=#" + Plugin.configBRBColor.Value + ">" + Plugin.configBRBColor.Value + "</color>.");
                         return false;
@@ -496,7 +532,6 @@ namespace StatusMessage.patches
                         Notify("BRB color currently set to <color=#" + Plugin.configBRBColor.Value + ">" + Plugin.configBRBColor.Value + "</color>.");
                         return false;
                     }
-
                     case "/afkcolor":
                     if (text.Length >= 16)
                     {
@@ -512,7 +547,6 @@ namespace StatusMessage.patches
                         Notify("AFK color currently set to <color=#" + Plugin.configAFKColor.Value + ">" + Plugin.configAFKColor.Value + "</color>.");
                         return false;
                     }
-                        
                 }
             }
             if (text.Length >= 9) // /afktimer, /brbtimer
@@ -559,7 +593,6 @@ namespace StatusMessage.patches
                 {
                     if (text.Length > 9)
                     {
-                        
                         string newname = text.Substring(9); //gradientReady? ApplyGradient(text.Substring(9)) : text.Substring(9);
                         if (Plugin.configUseGradient.Value)
                         {
@@ -578,9 +611,8 @@ namespace StatusMessage.patches
                         Notify("Name changed to " + newname + ".");
                         ResetPostMessage();
                         if (Plugin.configScrollingGradient.Value) rollingOffset = 0;
-                        if (Plugin.configUseGradient.Value) MakeGradient(newname);
+                        SendSetName();
                         EmitUpdate();
-                    
                     }
                     else
                     {
@@ -603,7 +635,6 @@ namespace StatusMessage.patches
                         ResetPostMessage();
                         Notify("BRB message changed to " + Plugin.configBRBMessage.Value + ".");
                         return false;
-                        
                     }
                     else
                     {
@@ -632,9 +663,8 @@ namespace StatusMessage.patches
                     {
                         statusmsg = text.Substring(8);
                         if (gradientReady) gradientReady = false;
-                        SetName("status");
                         if (Plugin.configScrollingGradient.Value) rollingOffset = 0;
-                        if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+                        SendSetName();
                         EmitUpdate();
                         ResetPostMessage();
                         Notify("Status changed to " + statusmsg + ".");
@@ -644,13 +674,11 @@ namespace StatusMessage.patches
                     {
                         statusmsg = "";
                         if (gradientReady) gradientReady = false;
-                        SetName("basic");
                         if (Plugin.configScrollingGradient.Value) rollingOffset = 0;
-                        if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+                        SendSetName();
                         EmitUpdate();
                         ResetPostMessage();
                         Notify("Status message cleared.");
-
                         return false;
                     }
                 }
@@ -662,7 +690,6 @@ namespace StatusMessage.patches
                     case "/useafk":
                     Plugin.configUseAFK.Value = !Plugin.configUseAFK.Value;
                     string a_onoff = Plugin.configUseAFK.Value ? "on" : "off";
-
                     ResetPostMessage();
                     Notify("AFK system turned " + a_onoff + ".");
                     return false;
@@ -670,7 +697,6 @@ namespace StatusMessage.patches
                     case "/usebrb":
                     Plugin.configUseBRB.Value = !Plugin.configUseBRB.Value;
                     string b_onoff = Plugin.configUseBRB.Value ? "on" : "off";
-
                     ResetPostMessage();
                     Notify("BRB system turned " + b_onoff + ".");
                     return false;
@@ -688,7 +714,6 @@ namespace StatusMessage.patches
                 Notify("/afkmsg <color=#4394b0>AFK</color>");
                 Notify("/afktimer <color=#a83131>x</color> (in minutes)");
                 Notify("/afkcolor <color=#9db143>123456</color>");
-                
                 ResetPostMessage();
                 return false;
             }
@@ -698,22 +723,30 @@ namespace StatusMessage.patches
                 Notify("/usegradient");
                 Notify("<b><i>Make sure to /setname to ONLY your name, no tags</b></i>");
                 Notify("/gradientcolor <color=#a83131>x</color> <color=#9db143>123456</color>");
-                Notify("/gradientstretch <color=#a83131>xx</color> (0-64)");
+                Notify("/gradientstretch <color=#a83131>xx</color> (0-128)");
                 Notify("/gradientthree - enable third gradient color");
-                Notify("/gradientscroll - gradient autoscrolling");
-                Notify("turning on third gradient will disable gradient scrolling and vice versa.");
-                
+                //Notify("/gradientscroll - gradient autoscrolling");
+                //Notify("/gradientscrollstyle - swaps modes");
+                //Notify("turning on third gradient will disable gradient scrolling and vice versa.");
                 ResetPostMessage();
                 return false;
             }
             return true;
+        }
+        public static void SendSetName()
+        {
+            if (Plugin.configUseGradient.Value) MakeGradient(Plugin.configNameBase.Value);
+            else if (statusmsg != "") SetName("status");
+            else if (isAFK) SetName("afk");
+            else if (isBRB) SetName("brb");
+            else SetName("basic");
         }
         public static void SetName(string type)
         {
             switch(type)
             {
                 case "basic":
-                    string basic_namebase = gradientReady ? ApplyGradient(Plugin.configNameBase.Value) : Plugin.configNameBase.Value;
+                    string basic_namebase = Plugin.configUseGradient.Value && gradientReady ? ApplyGradient(Plugin.configNameBase.Value) : Plugin.configNameBase.Value;
                     MonoSingleton<DataManager>.I.PlayerData.Name = basic_namebase;
                     break;
                 case "status":
@@ -729,7 +762,6 @@ namespace StatusMessage.patches
                     string brb_post = Plugin.configBracketType.Value.Substring(1);
                     string brbmsg = Plugin.configBRBMessage.Value;
                     string brb_color = Plugin.configBRBColor.Value;
-                    
                     MonoSingleton<DataManager>.I.PlayerData.Name = brb_namebase + " <color=#" + brb_color + ">" + brb_pre + brbmsg + brb_post + "</color>";
                     break;
                 case "afk":
@@ -752,26 +784,32 @@ namespace StatusMessage.patches
             EventSystem.current.SetSelectedGameObject(null);
             if(!skiptext) MonoSingleton<UIManager>.I.MessageInput.text = "";
         }
-
-        [ServerRpc(Channel.UnreliableSequenced, false, true, PurrNet.CompressionLevel.None, 5f, StripCodeModeOverride.Settings)]
-	    public static void EmitUpdate()
+        public static float UpdateDelayer = 0;
+        public static void EmitUpdate()
         {
             if (MonoSingleton<MainSceneManager>.I != null)
             {
                 try
                 {
-                    NetworkSingleton<TextChannelManager>.I.MainCustomizationController.UpdatePlayerInfo(MonoSingleton<DataManager>.I.PlayerData.GetPlayerIdInfo());
-                    string text3 = (MonoSingleton<UIManager>.I.PlayerText.text = (NetworkSingleton<TextChannelManager>.I.UserName = MonoSingleton<DataManager>.I.PlayerData.Name));
-                    if (_ifTeleportString != "")
+                    if (UpdateDelayer <= 0)
                     {
-                        var namefieldRef = AccessTools.FieldRefAccess<UIManager, TextMeshProUGUI>("_playerText");
-                        var nameinstance = MonoSingleton<UIManager>.I;
-                        var playname = MonoSingleton<DataManager>.I.PlayerData.Name;
-                        namefieldRef(nameinstance).text = playname + _ifTeleportString;
+                        NetworkSingleton<TextChannelManager>.I.MainCustomizationController.UpdatePlayerInfo(MonoSingleton<DataManager>.I.PlayerData.GetPlayerIdInfo());
+                        string text3 = (MonoSingleton<UIManager>.I.PlayerText.text = (NetworkSingleton<TextChannelManager>.I.UserName = MonoSingleton<DataManager>.I.PlayerData.Name));
+                        if (_ifTeleportString != "")
+                        {
+                            var namefieldRef = AccessTools.FieldRefAccess<UIManager, TextMeshProUGUI>("_playerText");
+                            var nameinstance = MonoSingleton<UIManager>.I;
+                            var playname = MonoSingleton<DataManager>.I.PlayerData.Name;
+                            namefieldRef(nameinstance).text = playname + _ifTeleportString;
+                        }
                     }
                 }
-                catch (NullReferenceException) {}
-                
+                catch (NullReferenceException)
+                {
+                    UpdateDelayer = 2.5f;
+                    Debug.Log("StatusManager exception, delaying");
+                    //Notify("StatusManager exception, delaying");
+                }
             }
         }
         public static bool CheckName( string name )
