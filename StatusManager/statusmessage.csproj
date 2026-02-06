@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net46</TargetFramework>
     <AssemblyName>officerballs.StatusManager</AssemblyName>
-    <Version>1.1.2</Version>
+    <Version>1.1.3</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <RootNamespace>StatusMessage</RootNamespace>
@@ -16,6 +16,7 @@
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/OnTogether_Data/Managed/DOTween.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/OnTogether_Data/Managed/netstandard.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/OnTogether_Data/Managed/PurrNet.Runtime.dll" />
+    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/OnTogether_Data/Managed/com.rlabrecque.steamworks.net.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/OnTogether_Data/Managed/PurrNetLobbySetup.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/OnTogether_Data/Managed/UnityEngine.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/OnTogether_Data/Managed/Unity.TextMeshPro.dll" />
@@ -30,5 +31,3 @@
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
   </ItemGroup>
 </Project>
-
-
