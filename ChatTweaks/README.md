@@ -16,10 +16,12 @@
 - /outlinewidth x.xx - outline width. default: 0.25  
 - /outlineopacity x - outline opacity ranging 0-255. default: 205.  
 - /usetimestamps - enable/disable the timestamping system. default: on.  
-- /mutetext - enable/disable the chat message noises. default: on.  
+- /disablechattags - enable/disable text cleanup (removing all tags for clean visible chat). default: on.  
+- /muteglobal - enable/disable the chat message noises for global chat. default: on.  
+- /mutelocal - enable/disable the chat message noises for local chat. default: on.  
+- /muteduringtimer - enable/disable the chat message noises when the timer's on "study". default: off.  
 - /mutejoinleave - enable/disable the join/leave noises. default: on.  
 
 # Manual Installation:  
 1. Install BepInEx as directed on GitHub/Thunderstore.  
 2. Extract archive to your game's installation, making sure to overwrite/merge the folders as prompted.
-
