@@ -12,16 +12,19 @@ namespace ChatTweaks
         public static ConfigEntry<int> configTextSize  { get; private set; }
         public static ConfigEntry<string> configColorWrap { get; private set; }
         public static ConfigEntry<string> configSystemColorWrap { get; private set; }
-        public static ConfigEntry<bool> configMsgNoises  { get; private set; }
+        public static ConfigEntry<bool> configLocalNoises { get; private set; }
+        public static ConfigEntry<bool> configGlobalNoises { get; private set; }
+        public static ConfigEntry<bool> configMuteDuringFocus { get; private set; }
         public static ConfigEntry<bool> configJoinLeaveNoises  { get; private set; }
         public static ConfigEntry<bool> configUseTimeStamps { get; private set; }
+        public static ConfigEntry<bool> configCleanUpChat { get; private set; }
         public static ConfigEntry<string> configOutlineColor { get; private set; }
         public static ConfigEntry<float> configOutlineWidth { get; private set; }
         public static ConfigEntry<int> configOutlineOpacity { get; private set; }
 
         public const string modGUID = "officerballs.chatTweaks";
         public const string modName = "Chat Tweaks";
-        public const string modVersion = "1.0.7.0";
+        public const string modVersion = "1.0.8.0";
 
         private Harmony harmony = new Harmony(modGUID);
 
@@ -37,7 +40,9 @@ namespace ChatTweaks
             harmony.PatchAll(typeof(PlayerPanelPatch));
             harmony.PatchAll(typeof(joinSoundPatch));
 
-            configMsgNoises = Config.Bind("General.Toggles", "PlayMessageNoises", true, "Enable or disable on-message noises.");
+            configLocalNoises = Config.Bind("General.Toggles", "PlayLocalNoises", true, "Enable or disable on-message noises in local chat.");
+            configGlobalNoises = Config.Bind("General.Toggles", "PlayGlobalNoises", true, "Enable or disable on-message noises in global chat.");
+            configMuteDuringFocus = Config.Bind("General.Toggles", "MuteDuringTimer", false, "Mutes on top of local/global settings during pomodoro timer.");
             configJoinLeaveNoises = Config.Bind("General.Toggles", "PlayJoinLeaveNoises", true, "Enable or disable on-leave/join noises.");
             configTextSize = Config.Bind("General", "TextSize", 48, "Wraps chat with a size tag.");
             configColorWrap = Config.Bind("General", "TextColor", "ffffff", "Wraps chat with a color tag.");
@@ -48,6 +53,7 @@ namespace ChatTweaks
             configOutlineOpacity = Config.Bind("General", "OutlineOpacity", 205, "Outline's opacity.");
 
             configUseTimeStamps = Config.Bind("General","UseTimestamps", true, "Whether to use timestamps in chat.");
+            configCleanUpChat = Config.Bind("General", "DisableChatTags", true, "Removes all effects from text messages.");
 
             mls.LogInfo("Chat tweaked");
         }
