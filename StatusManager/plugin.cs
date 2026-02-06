@@ -28,6 +28,7 @@ namespace StatusMessage
         public static ConfigEntry<bool> configUseGradient { get; private set; }
         public static ConfigEntry<int> configGradientBuffer { get; private set; }
         public static ConfigEntry<bool> configScrollingGradient { get; private set; }
+        public static ConfigEntry<bool> configScrollStyle { get; private set; }
         public static ConfigEntry<bool> configUseThirdColor { get; private set; }
         public static ConfigEntry<string> configGradientColor1 { get; private set; }
         public static ConfigEntry<string> configGradientColor2 { get; private set; }
@@ -39,7 +40,7 @@ namespace StatusMessage
 
         public const string modGUID = "officerballs.StatusManager";
         public const string modName = "Status Manager";
-        public const string modVersion = "1.1.2.0";
+        public const string modVersion = "1.1.3.0";
 
         private Harmony harmony = new Harmony(modGUID);
 
@@ -61,12 +62,13 @@ namespace StatusMessage
             
             configUseGradient = Config.Bind("General.Gradient", "UseGradient", false, "Toggle gradient mode on or off.");
 
-            configScrollingGradient = Config.Bind("General.Gradient", "ScrollingGradient", false, "Toggle gradient auto-scrolling. Can't use with UseThirdColor.");
-            configUseThirdColor = Config.Bind("General.Gradient", "UseThirdColor", false, "Use three gradient colors. Can't use with ScrollingGradient.");
-            configGradientColor1 = Config.Bind("General.Gradient", "GradientColor1", "4394b0", "First gradient color.");
-            configGradientColor2 = Config.Bind("General.Gradient", "GradientColor2", "ce6c9f", "Second gradient color.");
-            configGradientColor3 = Config.Bind("General.Gradient", "GradientColor3", "ffd45d", "Third gradient color (only available for non-scrolling).");
-            configGradientBuffer = Config.Bind("General.Gradient", "GradientBuffer", 0, "Additional length buffer for gradients. Limited 0-32.");
+            configScrollingGradient = Config.Bind("General.Gradient", "ScrollingGradient", false, "Toggle gradient auto-scrolling.");
+            configScrollStyle = Config.Bind("General.Gradient", "ScrollStyle", false, "Swap gradient scroll styles.");
+            configUseThirdColor = Config.Bind("General.Gradient", "UseThirdColor", true, "Use three gradient colors.");
+            configGradientColor1 = Config.Bind("General.Gradient", "GradientColor1", "ff5277", "First gradient color.");
+            configGradientColor2 = Config.Bind("General.Gradient", "GradientColor2", "92e8c0", "Second gradient color.");
+            configGradientColor3 = Config.Bind("General.Gradient", "GradientColor3", "3978a8", "Third gradient color.");
+            configGradientBuffer = Config.Bind("General.Gradient", "GradientBuffer", 0, "Additional length buffer for gradients. Limited 0-128.");
 
             configUseBRB = Config.Bind("General.BRB", "UseBRB", true, "Enables auto-BRB system.");
             configBRBTimer = Config.Bind("General.BRB", "BRBTimer", 2, "Time in minutes before BRB applies. Must be lower than AFK timer if that's enabled.");
@@ -84,4 +86,3 @@ namespace StatusMessage
 
     }
 }
-
