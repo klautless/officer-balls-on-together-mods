@@ -8,6 +8,7 @@ using PurrNet;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine.UI;
+using UnityEngine.Windows;
 
 namespace ChatTweaks.patches
 {
@@ -16,18 +17,65 @@ namespace ChatTweaks.patches
     
     public class TextPatcher
     {
+        public static string[] CleanText( string userName, string text )
+        {
+            string[] output = ["",""];
+            char[] user_chars = userName.ToCharArray();
+            for (var c = 0; c < user_chars.Length; c++) { if (user_chars[c] == '<') {
+                bool closingFound = false; bool isTag = false; int skipto = 0;
+                if (user_chars.Length > c) {
+                    bool skipAndColorize = false; bool markAsCloser = false;
+                    if (user_chars[c+1] == '#') skipAndColorize = true;
+                    if (user_chars[c+1] == '/') markAsCloser = true;
+                    for (var ci = c+1; ci < user_chars.Length; ci++) {
+                        if (closingFound) break; if (user_chars[ci] == '>') {
+                            if (!skipAndColorize && !markAsCloser) {
+                                string checkTagBase = userName.Substring(c,(ci-c)+1); string checkTag = "";
+                                char[] ctag = checkTagBase.ToCharArray();
+                                for (var ch = 0; ch < ctag.Length; ch++)
+                                    { if (ctag[ch] == '=') { checkTag+=">"; break; } checkTag+=checkTagBase[ch]; }
+                                checkTag = checkTag.Insert(1,"/");
+                                if (userName.Substring(ci).Contains(checkTag)) closingFound = true;
+                                if (closingFound) break;
+                                isTag = true; skipto = ci; output[0]+=checkTag; break;
+                                }
+                                else if (skipAndColorize)
+                                    { isTag = true; skipto = ci; break; }
+                                else if (markAsCloser)
+                                    { isTag = true; skipto = ci; break; }
+                    } } }
+                    if (isTag)
+                        { c = skipto; continue; }
+            } }
+            for (var c = 0; c < text.Length; c++) { if (text[c] == '<') {
+                bool closingFound = false; bool isTag = false; int skipto = 0;
+                if (text.Length > c) { for (var ci = c+1; ci < text.Length; ci++)
+                    { if (closingFound) break; if (text[ci] == '>') { isTag = true; skipto = ci; break; } } }
+                    if (isTag)
+                        { c = skipto; continue; }
+                } output[1]+=text[c]; }
+            return output;
+        }
+
         [HarmonyPatch("AddMessageUI")]
         [HarmonyPrefix]
         public static bool MsgUIFix( string userName, string text, bool isLocal, int senderIndex, ref List<GameObject> ____messageObjectsLocal, ref List<GameObject> ____messageObjectsGlobal, ref TMP_Text ____textPrefab )
         {
             TMP_Text tMP_Text = UnityProxy.Instantiate( ____textPrefab, isLocal ? MonoSingleton<UIManager>.I.TextContentLocalTransform : MonoSingleton<UIManager>.I.TextContentGlobalTransform);
             var stamp = Plugin.configUseTimeStamps.Value ? "[" + DateTime.Now.ToString("h:mm tt") + "]" : "";
-            if (Plugin.configMsgNoises.Value )
+            if ((Plugin.configLocalNoises.Value && isLocal) || Plugin.configGlobalNoises.Value )
             {
-		        MonoSingleton<SFXManager>.I.PlayRodAppear();
+                if ( ( Plugin.configMuteDuringFocus.Value && ( MonoSingleton<PomodoroController>.I.PomodoroType != PomodoroType.Study || MonoSingleton<PomodoroController>.I.IsPaused) ) || !Plugin.configMuteDuringFocus.Value )
+		        { MonoSingleton<SFXManager>.I.PlayRodAppear(); }
+            }
+            string[] cleaner = ["",""];
+            if (Plugin.configCleanUpChat.Value)
+            {
+                cleaner = CleanText( userName, text );
+                text = cleaner[1];
             }
             string size = Plugin.configTextSize.Value.ToString();
-            tMP_Text.text = "<size=" + size + ">" + stamp + " <color=#" + ScriptableSingleton<GameSettings>.I.MessageOthersColors[senderIndex] + "ff>" + userName + ":</color><color=#" + Plugin.configColorWrap.Value + "> " + text;
+            tMP_Text.text = "<size=" + size + ">" + stamp + " <color=#" + ScriptableSingleton<GameSettings>.I.MessageOthersColors[senderIndex] + "ff>" + userName + "</color>:" + cleaner[0] + "<color=#" + Plugin.configColorWrap.Value + "> " + text;
             if (isLocal)
             {
                 ____messageObjectsLocal.Add(tMP_Text.gameObject);
@@ -67,57 +115,75 @@ namespace ChatTweaks.patches
             string text = MonoSingleton<UIManager>.I.MessageInput.text;
             if (text == "/help")
             {
-                MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                EventSystem.current.SetSelectedGameObject(null);
-                NetworkSingleton<TextChannelManager>.I.AddNotification("/help chat for ChatTweaks commands");
+                FinishCmds(false);
+                Notify("/help chat for ChatTweaks commands");
                 return true;
             }
             if (text.ToLower() == "/help chat" || text.ToLower() == "/help chattweaks")
             {
-                NetworkSingleton<TextChannelManager>.I.AddNotification("Available commands:");
-                NetworkSingleton<TextChannelManager>.I.AddNotification("/mutetext");
-                NetworkSingleton<TextChannelManager>.I.AddNotification("/mutejoinleave");
-                NetworkSingleton<TextChannelManager>.I.AddNotification("/usetimestamps");
-                NetworkSingleton<TextChannelManager>.I.AddNotification("/textsize <color=#a83131>x</color>");
-                NetworkSingleton<TextChannelManager>.I.AddNotification("/textcolor <color=#9db143>123456</color>");
-                NetworkSingleton<TextChannelManager>.I.AddNotification("/systemcolor <color=#9db143>123456</color>");
-                NetworkSingleton<TextChannelManager>.I.AddNotification("/outlinecolor <color=#9db143>123456</color>");
-                NetworkSingleton<TextChannelManager>.I.AddNotification("/outlinewidth <color=#a83131>x.xx</color>");
-                NetworkSingleton<TextChannelManager>.I.AddNotification("/outlineopacity <color=#a83131>0-255</color>");
+                Notify("Available commands:");
+                Notify("/mutelocal");
+                Notify("/muteglobal");
+                Notify("/muteduringtimer");
+                Notify("/mutejoinleave");
+                Notify("/usetimestamps");
+                Notify("/disablechattags");
 
-                MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                EventSystem.current.SetSelectedGameObject(null);
-                MonoSingleton<UIManager>.I.MessageInput.text = "";
+                Notify("/textsize <color=#a83131>x</color>");
+                Notify("/textcolor <color=#9db143>123456</color>");
+                Notify("/systemcolor <color=#9db143>123456</color>");
+                Notify("/outlinecolor <color=#9db143>123456</color>");
+                Notify("/outlinewidth <color=#a83131>x.xx</color>");
+                Notify("/outlineopacity <color=#a83131>0-255</color>");
+                FinishCmds();
                 return false;
             }
-            if (text.ToLower() == "/mutetext")
+            if (text.ToLower() == "/disablechattags")
             {
-                Plugin.configMsgNoises.Value = !Plugin.configMsgNoises.Value;
-                string isMuted = Plugin.configMsgNoises.Value ? "on" : "off";
-                NetworkSingleton<TextChannelManager>.I.AddNotification("Message noises turned " + isMuted);
-                MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                EventSystem.current.SetSelectedGameObject(null);
-                MonoSingleton<UIManager>.I.MessageInput.text = "";
+                Plugin.configCleanUpChat.Value = !Plugin.configCleanUpChat.Value;
+                string isMuted = Plugin.configCleanUpChat.Value ? "off" : "on";
+                Notify("Chat tags turned " + isMuted + ".");
+                FinishCmds();
+                return false;
+            }
+            if (text.ToLower() == "/mutelocal")
+            {
+                Plugin.configLocalNoises.Value = !Plugin.configLocalNoises.Value;
+                string isMuted = Plugin.configLocalNoises.Value ? "on" : "off";
+                Notify("Local message noises turned " + isMuted + ".");
+                FinishCmds();
+                return false;
+            }
+            if (text.ToLower() == "/muteduringtimer")
+            {
+                Plugin.configMuteDuringFocus.Value = !Plugin.configMuteDuringFocus.Value;
+                string isMuted = Plugin.configMuteDuringFocus.Value ? "on" : "off";
+                Notify("Mute during timer turned " + isMuted + ".");
+                FinishCmds();
+                return false;
+            }
+            if (text.ToLower() == "/muteglobal")
+            {
+                Plugin.configGlobalNoises.Value = !Plugin.configGlobalNoises.Value;
+                string isMuted = Plugin.configGlobalNoises.Value ? "on" : "off";
+                Notify("Global message noises turned " + isMuted + ".");
+                FinishCmds();
                 return false;
             }
             if (text.ToLower() == "/mutejoinleave")
             {
                 Plugin.configJoinLeaveNoises.Value = !Plugin.configJoinLeaveNoises.Value;
                 string isMuted = Plugin.configJoinLeaveNoises.Value ? "on" : "off";
-                NetworkSingleton<TextChannelManager>.I.AddNotification("Join/leave noises turned " + isMuted);
-                MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                EventSystem.current.SetSelectedGameObject(null);
-                MonoSingleton<UIManager>.I.MessageInput.text = "";
+                Notify("Join/leave noises turned " + isMuted + ".");
+                FinishCmds();
                 return false;
             }
             if (text.ToLower() == "/usetimestamps")
             {
                 Plugin.configUseTimeStamps.Value = !Plugin.configUseTimeStamps.Value;
                 string isMuted = Plugin.configUseTimeStamps.Value ? "on" : "off";
-                NetworkSingleton<TextChannelManager>.I.AddNotification("Timestamps turned " + isMuted);
-                MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                EventSystem.current.SetSelectedGameObject(null);
-                MonoSingleton<UIManager>.I.MessageInput.text = "";
+                Notify("Timestamps turned " + isMuted + ".");
+                FinishCmds();
                 return false;
             }
             if (text.Length >= 10) // /textcolor
@@ -127,15 +193,10 @@ namespace ChatTweaks.patches
                     if (text.Length >= 17)
                     {
                         Plugin.configColorWrap.Value = text.Substring(11, 6);
-                        NetworkSingleton<TextChannelManager>.I.AddNotification("Text color changed to <color=#" + Plugin.configColorWrap.Value + ">" + Plugin.configColorWrap.Value + "</color>.");
+                        Notify("Text color changed to <color=#" + Plugin.configColorWrap.Value + ">" + Plugin.configColorWrap.Value + "</color>.");
                     }
-                    else
-                    {
-                        NetworkSingleton<TextChannelManager>.I.AddNotification("Text color currently set to <color=#" + Plugin.configColorWrap.Value + ">" + Plugin.configColorWrap.Value + "</color>.");
-                    }
-                    MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                    EventSystem.current.SetSelectedGameObject(null);
-                    MonoSingleton<UIManager>.I.MessageInput.text = "";
+                    else Notify("Text color currently set to <color=#" + Plugin.configColorWrap.Value + ">" + Plugin.configColorWrap.Value + "</color>.");
+                    FinishCmds();
                     return false;
                 }
             }
@@ -146,15 +207,10 @@ namespace ChatTweaks.patches
                     if (text.Length >= 19)
                     {
                         Plugin.configSystemColorWrap.Value = text.Substring(13, 6);
-                        NetworkSingleton<TextChannelManager>.I.AddNotification("System text color changed to <color=#" + Plugin.configSystemColorWrap.Value + ">" + Plugin.configSystemColorWrap.Value + "</color>.");
+                        Notify("System text color changed to <color=#" + Plugin.configSystemColorWrap.Value + ">" + Plugin.configSystemColorWrap.Value + "</color>.");
                     }
-                    else
-                    {
-                        NetworkSingleton<TextChannelManager>.I.AddNotification("System text color currently set to <color=#" + Plugin.configSystemColorWrap.Value + ">" + Plugin.configSystemColorWrap.Value + "</color>.");
-                    }
-                    MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                    EventSystem.current.SetSelectedGameObject(null);
-                    MonoSingleton<UIManager>.I.MessageInput.text = "";
+                    else Notify("System text color currently set to <color=#" + Plugin.configSystemColorWrap.Value + ">" + Plugin.configSystemColorWrap.Value + "</color>.");
+                    FinishCmds();
                     return false;
                 }
             }
@@ -170,21 +226,13 @@ namespace ChatTweaks.patches
                             if (output < 0) output = 0;
                             else if (output > 255) output = 255;
                             Plugin.configOutlineOpacity.Value = output;
-                            NetworkSingleton<TextChannelManager>.I.AddNotification("Outline opacity changed to " + Plugin.configOutlineOpacity.Value.ToString() + ".");
+                            Notify("Outline opacity changed to " + Plugin.configOutlineOpacity.Value.ToString() + ".");
                             outlineChanger();
                         }
-                        else
-                        {
-                            NetworkSingleton<TextChannelManager>.I.AddNotification("Outline opacity currently set to " + Plugin.configOutlineOpacity.Value.ToString() + ".");
-                        }
+                        else Notify("Outline opacity currently set to " + Plugin.configOutlineOpacity.Value.ToString() + ".");
                     }
-                    else
-                    {
-                        NetworkSingleton<TextChannelManager>.I.AddNotification("Outline opacity currently set to " + Plugin.configOutlineOpacity.Value.ToString() + ".");
-                    }
-                    MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                    EventSystem.current.SetSelectedGameObject(null);
-                    MonoSingleton<UIManager>.I.MessageInput.text = "";
+                    else Notify("Outline opacity currently set to " + Plugin.configOutlineOpacity.Value.ToString() + ".");
+                    FinishCmds();
                     return false;
                 }
             }
@@ -195,16 +243,11 @@ namespace ChatTweaks.patches
                     if (text.Length >= 20)
                     {
                         Plugin.configOutlineColor.Value = text.Substring(14, 6);
-                        NetworkSingleton<TextChannelManager>.I.AddNotification("Outline color changed to <color=#" + Plugin.configOutlineColor.Value + ">" + Plugin.configOutlineColor.Value + "</color>.");
+                        Notify("Outline color changed to <color=#" + Plugin.configOutlineColor.Value + ">" + Plugin.configOutlineColor.Value + "</color>.");
                         outlineChanger();
                     }
-                    else
-                    {
-                        NetworkSingleton<TextChannelManager>.I.AddNotification("Outline color currently set to <color=#" + Plugin.configOutlineColor.Value + ">" + Plugin.configOutlineColor.Value + "</color>.");
-                    }
-                    MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                    EventSystem.current.SetSelectedGameObject(null);
-                    MonoSingleton<UIManager>.I.MessageInput.text = "";
+                    else Notify("Outline color currently set to <color=#" + Plugin.configOutlineColor.Value + ">" + Plugin.configOutlineColor.Value + "</color>.");
+                    FinishCmds();
                     return false;
                 }
                 else if (text.Substring(0,13) == "/outlinewidth")
@@ -214,21 +257,13 @@ namespace ChatTweaks.patches
                         if (float.TryParse(text.Substring(14), out float output))
                         {
                             Plugin.configOutlineWidth.Value = output;
-                            NetworkSingleton<TextChannelManager>.I.AddNotification("Outline width changed to " + Plugin.configOutlineWidth.Value.ToString() + ".");
+                            Notify("Outline width changed to " + Plugin.configOutlineWidth.Value.ToString() + ".");
                             outlineChanger();
                         }
-                        else
-                        {
-                            NetworkSingleton<TextChannelManager>.I.AddNotification("Outline width currently set to " + Plugin.configOutlineWidth.Value.ToString() + ".");
-                        }
+                        else Notify("Outline width currently set to " + Plugin.configOutlineWidth.Value.ToString() + ".");
                     }
-                    else
-                    {
-                        NetworkSingleton<TextChannelManager>.I.AddNotification("Outline width currently set to " + Plugin.configOutlineWidth.Value.ToString() + ".");
-                    }
-                    MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                    EventSystem.current.SetSelectedGameObject(null);
-                    MonoSingleton<UIManager>.I.MessageInput.text = "";
+                    else Notify("Outline width currently set to " + Plugin.configOutlineWidth.Value.ToString() + ".");
+                    FinishCmds();
                     return false;
                 }
             }
@@ -241,36 +276,32 @@ namespace ChatTweaks.patches
                         if(int.TryParse(text.Substring(10), out int newsize))
                         {
                             Plugin.configTextSize.Value = newsize;
-                            NetworkSingleton<TextChannelManager>.I.AddNotification("Text size changed to " + Plugin.configTextSize.Value.ToString() + ".");
-                
+                            Notify("Text size changed to " + Plugin.configTextSize.Value.ToString() + ".");
                         }
-                        else
-                        {
-                            NetworkSingleton<TextChannelManager>.I.AddNotification("Text size currently set to " + Plugin.configTextSize.Value.ToString() + ".");
-                        }
+                        else Notify("Text size currently set to " + Plugin.configTextSize.Value.ToString() + ".");
                     }
-                    else
-                    {
-                        NetworkSingleton<TextChannelManager>.I.AddNotification("Text size currently set to " + Plugin.configTextSize.Value.ToString() + ".");
-                    }
-                    MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-                    EventSystem.current.SetSelectedGameObject(null);
-                    MonoSingleton<UIManager>.I.MessageInput.text = "";
+                    else Notify("Text size currently set to " + Plugin.configTextSize.Value.ToString() + ".");
+                    FinishCmds();
                     return false;
                 }
             }
             return true;
         }
 
+        public static void FinishCmds(bool clearText=true)
+        {
+            MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
+            EventSystem.current.SetSelectedGameObject(null);
+            if (clearText) MonoSingleton<UIManager>.I.MessageInput.text = "";
+        }
+        public static void Notify(string text) { NetworkSingleton<TextChannelManager>.I.AddNotification(text); }
+
         [HarmonyPatch("SendMessageAsync")]
         [HarmonyPrefix]
         public static bool HelpCloser(byte[] textBytes)
         {
             string text = Encoding.Unicode.GetString(textBytes);
-            if(text == "/help")
-            {
-                return false;
-            }
+            if(text == "/help") return false;
             return true;
         }
 
