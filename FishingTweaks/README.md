@@ -6,7 +6,9 @@ Changes the fishing catch timer to 60 seconds so you have time to alt+tab back i
 - /autocatch - enable automatic minigame completion. default: off.  
 - /autorecast - enable recasting to your last position. cancel by stowing the fishing rod. default: off.  
 - /infinitebait - enable/disable the infinite bait. default: off.
-- /mutefishing - gets rid of the splash sfx when bobbers hit water. default: off.  
+- /mutefishing - gets rid of the splash sfx when bobbers hit water. default: off.  	
+- /muteminigame - gets rid of all fishing sfx while fishing. default: off.  
+- /mutefishduringtimer - gets rid of all fishing sfx while pomodoro timer's active. default: off.  
 - /forcenormalsizes - rerolls fish size visuals to keep oversized fish off your screen. default: off.
   
 Manual Installation:  
