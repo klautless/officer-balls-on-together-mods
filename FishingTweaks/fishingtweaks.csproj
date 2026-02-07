@@ -20,6 +20,7 @@
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/OnTogether_Data/Managed/UnityEngine.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/OnTogether_Data/Managed/Unity.TextMeshPro.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/OnTogether_Data/Managed/UnityEngine.UI.dll" />
+    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/OnTogether_Data/Managed/UnityEngine.AudioModule.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/OnTogether_Data/Managed/UnityEngine.InputLegacyModule.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/OnTogether_Data/Managed/UnityEngine.UIElementsModule.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/OnTogether_Data/Managed/UnityEngine.UIModule.dll" />
