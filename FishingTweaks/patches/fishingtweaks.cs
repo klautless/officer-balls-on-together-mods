@@ -246,7 +246,89 @@ namespace FishingTweaks.patches
         [HarmonyPrefix]
         public static bool SkipDropSound()
         {
-            if (Plugin.configMuteFishing.Value) return false;
+            if (( Plugin.configMuteFishingDuringFocus.Value &&
+            MonoSingleton<PomodoroController>.I.PomodoroType == PomodoroType.Study &&
+            !MonoSingleton<PomodoroController>.I.IsPaused ) || Plugin.configMuteMinigame.Value ) return false;
+            else return true;
+        }
+        [HarmonyPatch("SetFishingCast")]
+        [HarmonyPrefix]
+        public static bool SkipFishingCast()
+        {
+            if (( Plugin.configMuteFishingDuringFocus.Value &&
+            MonoSingleton<PomodoroController>.I.PomodoroType == PomodoroType.Study &&
+            !MonoSingleton<PomodoroController>.I.IsPaused ) || Plugin.configMuteMinigame.Value ) return false;
+            else return true;
+        }
+        [HarmonyPatch("SetFishingReel")]
+        [HarmonyPrefix]
+        public static bool SkipFishingReel()
+        {
+            if (( Plugin.configMuteFishingDuringFocus.Value &&
+            MonoSingleton<PomodoroController>.I.PomodoroType == PomodoroType.Study &&
+            !MonoSingleton<PomodoroController>.I.IsPaused ) || Plugin.configMuteMinigame.Value ) return false;
+            else return true;
+        }
+        [HarmonyPatch("SetFishingAlert")]
+        [HarmonyPrefix]
+        public static bool SkipFishingAlert()
+        {
+            if (( Plugin.configMuteFishingDuringFocus.Value &&
+            MonoSingleton<PomodoroController>.I.PomodoroType == PomodoroType.Study &&
+            !MonoSingleton<PomodoroController>.I.IsPaused ) || Plugin.configMuteMinigame.Value ) return false;
+            else return true;
+        }
+        [HarmonyPatch("StopFishingReel")]
+        [HarmonyPrefix]
+        public static bool SkipStopFishingReel( ref AudioSource ____audioSource)
+        {
+            if (( Plugin.configMuteFishingDuringFocus.Value &&
+            MonoSingleton<PomodoroController>.I.PomodoroType == PomodoroType.Study &&
+            !MonoSingleton<PomodoroController>.I.IsPaused ) || Plugin.configMuteMinigame.Value )
+            {
+                ____audioSource.Stop();
+                return false;
+            }
+            else return true;
+        }
+    }
+    [HarmonyPatch(typeof(SFXManager))]
+    public static class BlockSounds2
+    {
+        [HarmonyPatch("PlayFishCatch")]
+        [HarmonyPrefix]
+        public static bool SkipFishCatch()
+        {
+            if (( Plugin.configMuteFishingDuringFocus.Value &&
+            MonoSingleton<PomodoroController>.I.PomodoroType == PomodoroType.Study &&
+            !MonoSingleton<PomodoroController>.I.IsPaused ) || Plugin.configMuteMinigame.Value ) return false;
+            else return true;
+        }
+        [HarmonyPatch("PlayFishClick")]
+        [HarmonyPrefix]
+        public static bool SkipFishClick()
+        {
+            if (( Plugin.configMuteFishingDuringFocus.Value &&
+            MonoSingleton<PomodoroController>.I.PomodoroType == PomodoroType.Study &&
+            !MonoSingleton<PomodoroController>.I.IsPaused ) || Plugin.configMuteMinigame.Value ) return false;
+            else return true;
+        }
+        [HarmonyPatch("PlayFishFail")]
+        [HarmonyPrefix]
+        public static bool SkipFishFail()
+        {
+            if (( Plugin.configMuteFishingDuringFocus.Value &&
+            MonoSingleton<PomodoroController>.I.PomodoroType == PomodoroType.Study &&
+            !MonoSingleton<PomodoroController>.I.IsPaused ) || Plugin.configMuteMinigame.Value ) return false;
+            else return true;
+        }
+        [HarmonyPatch("PlayFishSuccess")]
+        [HarmonyPrefix]
+        public static bool SkipFishSuccess()
+        {
+            if (( Plugin.configMuteFishingDuringFocus.Value &&
+            MonoSingleton<PomodoroController>.I.PomodoroType == PomodoroType.Study &&
+            !MonoSingleton<PomodoroController>.I.IsPaused ) || Plugin.configMuteMinigame.Value ) return false;
             else return true;
         }
     }
@@ -271,6 +353,8 @@ namespace FishingTweaks.patches
                 Notify("/autorecast");
                 Notify("/infinitebait");
                 Notify("/mutefishing");
+                Notify("/muteminigame");
+                Notify("/mutefishduringtimer");
                 Notify("/forcenormalsizes");
                 FinishCmds();
                 return false;
@@ -288,6 +372,22 @@ namespace FishingTweaks.patches
                 Plugin.configMuteFishing.Value = !Plugin.configMuteFishing.Value;
                 string isMuted = Plugin.configMuteFishing.Value ? "muted" : "unmuted";
                 Notify("Fishing " + isMuted + ".");
+                FinishCmds();
+                return false;
+            }
+            if (text.ToLower() == "/muteminigame")
+            {
+                Plugin.configMuteMinigame.Value = !Plugin.configMuteMinigame.Value;
+                string isMuted = Plugin.configMuteMinigame.Value ? "muted" : "unmuted";
+                Notify("Fishing minigame " + isMuted + ".");
+                FinishCmds();
+                return false;
+            }
+            if (text.ToLower() == "/mutefishduringtimer")
+            {
+                Plugin.configMuteFishingDuringFocus.Value = !Plugin.configMuteFishingDuringFocus.Value;
+                string isMuted = Plugin.configMuteFishingDuringFocus.Value ? "enabled" : "disabled";
+                Notify("Mute fishing during timer " + isMuted + ".");
                 FinishCmds();
                 return false;
             }
