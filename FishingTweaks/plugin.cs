@@ -1,4 +1,5 @@
 using BepInEx;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using FishingTweaks.patches;
@@ -8,9 +9,14 @@ namespace FishingTweaks
     [BepInPlugin(modGUID, modName, modVersion)]
     public class Plugin : BaseUnityPlugin
     {
+        public static ConfigEntry<bool> configHideAnnoyingCatches  { get; private set; }
+        public static ConfigEntry<bool> configAutoCatch { get; private set; }
+        public static ConfigEntry<bool> configAutoRecast { get; private set; }
+        public static ConfigEntry<bool> configInfiniteBait { get; private set; }
+        public static ConfigEntry<bool> configMuteFishing  { get; private set; }
         public const string modGUID = "officerballs.FishingTweaks";
         public const string modName = "Fishing Tweaks";
-        public const string modVersion = "1.0.2.0";
+        public const string modVersion = "1.1.0.0";
 
         private Harmony harmony = new Harmony(modGUID);
 
@@ -23,6 +29,16 @@ namespace FishingTweaks
             harmony.PatchAll(typeof(FishingPatch));
             harmony.PatchAll(typeof(FishingPatch2));
             harmony.PatchAll(typeof(GroundCheckPatch));
+            harmony.PatchAll(typeof(KeepSizeInCheck));
+            harmony.PatchAll(typeof(ClickSender));
+            harmony.PatchAll(typeof(AddCommands));
+            harmony.PatchAll(typeof(BlockSounds));
+
+            configHideAnnoyingCatches = Config.Bind("General.Toggles", "HideAnnoyingCatches", false, "Resizes oversized fish from other players.");
+            configMuteFishing = Config.Bind("General.Toggles", "MuteFishing", false, "Gets rid of the annoying bobber noise.");
+            configAutoCatch = Config.Bind("General.Toggles", "AutoCatch", false, "Enable/disable automatic catching.");
+            configAutoRecast = Config.Bind("General.Toggles", "AutoRecast", false, "Automatically recast to last position when fishing.");
+            configInfiniteBait = Config.Bind("General.Toggles", "InfiniteBait", false, "Infinite bait.");
         }
 
     }
