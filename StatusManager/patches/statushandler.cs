@@ -116,6 +116,7 @@ namespace StatusMessage.patches
         public static List<string> colorlist = [];
         public static void MakeGradient(string name)
         {
+            name = StripTags(name);
             nameLen = name.Length;
             nameLen += Plugin.configGradientBuffer.Value;
             int r_one = Convert.ToInt32(Plugin.configGradientColor1.Value.Substring(0,2), 16);
@@ -256,16 +257,39 @@ namespace StatusMessage.patches
             }
             else
             {
+                int color = 0;
+                bool inTag = false;
                 char[] chars = name.ToCharArray();
                 for (int c = 0; c < chars.Count(); c++)
                 {
-                    int colorIndex = c + rollingOffset;
+                    bool skipOut = false;
+                    if (chars[c] == '<')
+                    {
+                        inTag = true;
+                    }
+                    else if (chars[c] == '>')
+                    {
+                        inTag = false;
+                        skipOut = true;
+                    }
+                    else if (chars[c] == ' ')
+                    {
+                        skipOut = true;
+                    }
+                    if (inTag || skipOut)
+                    {
+                        nametotal += chars[c].ToString();
+                        continue;
+                    }
+                    int colorIndex = color + rollingOffset;
                     if (colorIndex >= colorlist.Count()) colorIndex -= colorlist.Count();
                     if (colorIndex < 0) colorIndex = 0;
                     string a = "<#" + colorlist[colorIndex] + ">" + chars[c].ToString() + "</color>";
                     nametotal += a;
+                    color++;
                 }
             }
+            Debug.Log(nametotal);
             return nametotal;
         }
         public static int ColorSnap(int input)
@@ -459,19 +483,6 @@ namespace StatusMessage.patches
                 switch (commandcheck)
                 {
                     case "/usegradient":
-                        if (Plugin.configUseGradient.Value)
-                        {
-                            switch(CheckName(Plugin.configNameBase.Value))
-                            {
-                                case true:
-                                    break;
-                                case false:
-                                    Notify("Gradient names can't use tags.");
-                                    Notify("/setname to a tagless name first.");
-                                    ResetPostMessage();
-                                    return false;
-                            }
-                        }
                         Plugin.configUseGradient.Value = !Plugin.configUseGradient.Value;
                         string usegrad = Plugin.configUseGradient.Value ? "on" : "off";
                         Notify("Gradients turned " + usegrad);
@@ -594,18 +605,7 @@ namespace StatusMessage.patches
                     if (text.Length > 9)
                     {
                         string newname = text.Substring(9); //gradientReady? ApplyGradient(text.Substring(9)) : text.Substring(9);
-                        if (Plugin.configUseGradient.Value)
-                        {
-                            switch(CheckName(newname))
-                            {
-                                case true:
-                                    break;
-                                case false:
-                                    Notify("Gradient names can't use tags.");
-                                    ResetPostMessage();
-                                    return false;
-                            }
-                        }
+                        
                         if (gradientReady) gradientReady = false;
                         Plugin.configNameBase.Value = newname;
                         Notify("Name changed to " + newname + ".");
@@ -721,7 +721,6 @@ namespace StatusMessage.patches
             {
                 Notify("<b>Available commands:</b>");
                 Notify("/usegradient");
-                Notify("<b><i>Make sure to /setname to ONLY your name, no tags</b></i>");
                 Notify("/gradientcolor <color=#a83131>x</color> <color=#9db143>123456</color>");
                 Notify("/gradientstretch <color=#a83131>xx</color> (0-128)");
                 Notify("/gradientthree - enable third gradient color");
@@ -732,6 +731,36 @@ namespace StatusMessage.patches
                 return false;
             }
             return true;
+        }
+        public static string StripTags( string text )
+        {
+            string output = "";
+            char[] text_chars = text.ToCharArray();
+            for (var c = 0; c < text_chars.Length; c++)
+            {
+                if (text_chars[c] == '<')
+                {
+                    bool closingFound = false;
+                    if (text_chars.Length > c)
+                    {
+                        for (var ci = c+1; ci < text_chars.Length; ci++)
+                        {
+                            if (closingFound) break;
+                            if (text_chars[ci] == '>')
+                            {
+                                c = ci;
+                                closingFound = true;
+                                continue;
+                            }
+                        }
+                    }
+                    if (closingFound) continue;
+                }
+                else if (text_chars[c] == ' ') continue;
+                output+=text_chars[c];
+            }
+            Debug.Log(output);
+            return output;
         }
         public static void SendSetName()
         {
@@ -812,20 +841,7 @@ namespace StatusMessage.patches
                 }
             }
         }
-        public static bool CheckName( string name )
-        {
-            char[] chars = name.ToCharArray();
-            bool prefound = false;
-            bool postfound = false;
-            foreach (char c in chars)
-            {
-                if (c == '<') prefound = true;
-                if (c == '>') postfound = true;
-            }
-            if (prefound && postfound) return false;
-            return true;
-        }
-
+        
         [HarmonyPatch("SendMessageAsync")]
         [HarmonyPrefix]
         public static bool HelpCloser(byte[] textBytes)
