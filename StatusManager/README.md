@@ -4,7 +4,6 @@ adds an auto-brb + auto-afk system, custom status messages, lots of flexibility!
 check commands in game with /help any time.  
 
 **to change your name use the /setname command!**  
-**if you want to use gradients /setname to a name with NO tags first!**  
   
 ## Main commands  
   
@@ -32,7 +31,6 @@ check commands in game with /help any time.
   
 /help gradient - gives information on the gradient commands.  
 /usegradient - toggles the gradient system. default: disabled.  
-***make sure your username has no color tags already! do /setname to a decolored name first.***  
 /gradientstretch xx (0-64) - spreads out the gradiation. default: 0.  
 /gradientthree - toggles the third gradient color. default: disabled.  
 /gradientscroll - toggles the scrolling color effect. default: disabled.  
