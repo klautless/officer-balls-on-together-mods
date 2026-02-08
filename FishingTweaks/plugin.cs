@@ -18,7 +18,7 @@ namespace FishingTweaks
         public static ConfigEntry<bool> configMuteFishingDuringFocus { get; private set; }
         public const string modGUID = "officerballs.FishingTweaks";
         public const string modName = "Fishing Tweaks";
-        public const string modVersion = "1.1.0.0";
+        public const string modVersion = "1.1.1.0";
 
         private Harmony harmony = new Harmony(modGUID);
 
