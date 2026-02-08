@@ -17,8 +17,11 @@ namespace FishingTweaks.patches
         {
             if (FishingPatch.sendClick)
             {
-                FishingPatch.sendClick = false;
-                Traverse.Create(__instance).Property("IsMouseButton0Down").SetValue(true);
+                if (checkClick(MonoSingleton<FishingManager>.I))
+                {
+                    FishingPatch.sendClick = false;
+                    Traverse.Create(__instance).Property("IsMouseButton0Down").SetValue(true);
+                }
             }
         }
 
@@ -31,6 +34,27 @@ namespace FishingTweaks.patches
                 FishingPatch.sendUpClick = false;
                 Traverse.Create(__instance).Property("IsMouseButton0Up").SetValue(true);
             }
+        }
+        public static bool checkClick( FishingManager instance)
+        {
+            var _fishIcon = AccessTools.FieldRefAccess<FishingManager, RectTransform>("_fishIcon");
+            var _clickZone = AccessTools.FieldRefAccess<FishingManager, RectTransform>("_clickZone");
+            var _clickZoneDegree = AccessTools.FieldRefAccess<FishingManager, float>("_clickZoneDegree");
+            float z = _fishIcon(instance).rotation.eulerAngles.z;
+            float z2 = _clickZone(instance).rotation.eulerAngles.z;
+            float num = z2 + _clickZoneDegree(instance);
+            if (num >= 360f)
+            {
+                if (z >= z2 || z <= num - 360f)
+                {
+                    return true;
+                }
+            }
+            else if (z >= z2 && z <= num)
+            {
+                return true;
+            }
+            return false;
         }
     }
     [HarmonyPatch(typeof(FishingManager))]
@@ -70,11 +94,8 @@ namespace FishingTweaks.patches
             {
                 if ( clickDelayer <= 0 )
                 {
-                    if (checkClick(__instance))
-                    {
-                        sendClick = true;
-                        clickDelayer = 0.1f;
-                    }
+                    sendClick = true;
+                    clickDelayer = 0.0625f;
                 }
                 else clickDelayer -= Time.deltaTime;
             }
@@ -83,10 +104,7 @@ namespace FishingTweaks.patches
                 Plugin.configAutoRecast.Value &&
                 __instance.CurrentBait != BaitType.None &&
                 __instance.FishingState == FishingState.None &&
-                __instance.FishingCont.FishingRod.activeSelf &&
-                (NetworkSingleton<TextChannelManager>.I.MainMovementController.MovementState == MovementState.Idle ||
-                NetworkSingleton<TextChannelManager>.I.MainMovementController.MovementState == MovementState.Walk) &&
-                NetworkSingleton<TextChannelManager>.I.MainMovementController.GroundState == GroundState.Grounded)
+                __instance.FishingCont.FishingRod.activeSelf)
             {
                 ____castIndicator.gameObject.SetActive(value: true);
                 ____castIndicator.transform.position = recastPos;
@@ -109,27 +127,7 @@ namespace FishingTweaks.patches
         {
             recastPos = Vector3.zero;
         }
-        public static bool checkClick( FishingManager __instance)
-        {
-            var _fishIcon = AccessTools.FieldRefAccess<FishingManager, RectTransform>("_fishIcon");
-            var _clickZone = AccessTools.FieldRefAccess<FishingManager, RectTransform>("_clickZone");
-            var _clickZoneDegree = AccessTools.FieldRefAccess<FishingManager, float>("_clickZoneDegree");
-            float z = _fishIcon(__instance).rotation.eulerAngles.z;
-            float z2 = _clickZone(__instance).rotation.eulerAngles.z;
-            float num = z2 + _clickZoneDegree(__instance);
-            if (num >= 360f)
-            {
-                if (z >= z2 || z <= num - 360f)
-                {
-                    return true;
-                }
-            }
-            else if (z >= z2 && z <= num)
-            {
-                return true;
-            }
-            return false;
-        }
+        
 
     }
     [HarmonyPatch(typeof(TaskManager))]
@@ -167,8 +165,11 @@ namespace FishingTweaks.patches
                                 Fish fish = FreshFishes[i];
                                 float size = UnityEngine.Random.Range(fish.MinSize, fish.MaxSize);
                                 float sizeRatio = size / fish.AverageSize;
-                                caughtFish.Size = size;
-                                caughtFish.SizeRatio = sizeRatio;
+                                if (caughtFish.Size < fish.MinSize || caughtFish.Size > fish.MaxSize)
+                                {
+                                    caughtFish.Size = size;
+                                    caughtFish.SizeRatio = sizeRatio;
+                                }
                             }
                         }
                         break;
@@ -181,8 +182,11 @@ namespace FishingTweaks.patches
                                 Fish fish = Fishes[i];
                                 float size = UnityEngine.Random.Range(fish.MinSize, fish.MaxSize);
                                 float sizeRatio = size / fish.AverageSize;
-                                caughtFish.Size = size;
-                                caughtFish.SizeRatio = sizeRatio;
+                                if (caughtFish.Size < fish.MinSize || caughtFish.Size > fish.MaxSize)
+                                {
+                                    caughtFish.Size = size;
+                                    caughtFish.SizeRatio = sizeRatio;
+                                }
                             }
                         }
                         break;
@@ -195,8 +199,11 @@ namespace FishingTweaks.patches
                                 Fish fish = Garbages[i];
                                 float size = UnityEngine.Random.Range(fish.MinSize, fish.MaxSize);
                                 float sizeRatio = size / fish.AverageSize;
-                                caughtFish.Size = size;
-                                caughtFish.SizeRatio = sizeRatio;
+                                if (caughtFish.Size < fish.MinSize || caughtFish.Size > fish.MaxSize)
+                                {
+                                    caughtFish.Size = size;
+                                    caughtFish.SizeRatio = sizeRatio;
+                                }
                             }
                         }
                         break;
@@ -207,10 +214,7 @@ namespace FishingTweaks.patches
         [HarmonyPrefix]
         public static void ClickOnMinigameStart()
         {
-            if (Plugin.configAutoCatch.Value)
-            {
-                FishingPatch.sendClick = true;
-            }
+            if (Plugin.configAutoCatch.Value) FishingPatch.sendClick = true;
 
             if (Plugin.configInfiniteBait.Value)
             {
