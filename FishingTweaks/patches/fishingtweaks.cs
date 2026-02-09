@@ -8,31 +8,105 @@ using UnityEngine.EventSystems;
 
 namespace FishingTweaks.patches
 {
-    [HarmonyPatch(typeof(InputManager))]
-    public static class ClickSender
+    [HarmonyPatch(typeof(FishingManager))]
+    public static class FishingPatch
     {
-        [HarmonyPatch(typeof(InputManager), nameof(InputManager.IsMouseButton0Down), MethodType.Setter)]
+        public static float clickDelayer = 0f;
+        public static bool sendClick = false;
+        public static bool sendUpClick = false;
+        public static Vector3 recastPos = Vector3.zero;
+
+
+        [HarmonyPatch("Awake")]
         [HarmonyPostfix]
-        public static void AddClickIfAuto( InputManager __instance )
+        public static void FishingTweaks(ref float ____catchWait, ref List<int> ____baitCounts)
         {
-            if (FishingPatch.sendClick)
+            ____catchWait = 60f;
+            if (Plugin.configInfiniteBait.Value)
             {
-                if (checkClick(MonoSingleton<FishingManager>.I))
+                for (int bait = 0; bait < ____baitCounts.Count; bait++)
                 {
-                    FishingPatch.sendClick = false;
-                    Traverse.Create(__instance).Property("IsMouseButton0Down").SetValue(true);
+                    ____baitCounts[bait] = 40;
                 }
+                MonoSingleton<DataManager>.I.PlayerDataZip.BaitCounts = ____baitCounts;
+                MonoSingleton<DataManager>.I.SavePlayerZipData();
             }
         }
-
-        [HarmonyPatch(typeof(InputManager), nameof(InputManager.IsMouseButton0Up), MethodType.Setter)]
-        [HarmonyPostfix]
-        public static void AddClickIfRecast( InputManager __instance )
+        public static float updateDelayer = 0f;
+        public static bool loaded = false;
+        [HarmonyPatch("Update")]
+        [HarmonyPrefix]
+        public static void UpdateTweak()
         {
-            if (FishingPatch.sendUpClick)
+            if (updateDelayer > 0) { updateDelayer -= Time.deltaTime; return; }
+            if (MonoSingleton<MainSceneManager>.I != null && !loaded)
             {
-                FishingPatch.sendUpClick = false;
-                Traverse.Create(__instance).Property("IsMouseButton0Up").SetValue(true);
+                try {
+                    var loadtest1 = MonoSingleton<FishingManager>.I.FishingCont;
+                    var loadtest2 = NetworkSingleton<TextChannelManager>.I.MainMovementController;
+                    var _preload3 = AccessTools.FieldRefAccess<FishingManager, Transform>("_castIndicator");
+                    var load3 = _preload3(MonoSingleton<FishingManager>.I);
+                    loaded = true;
+                     }
+                catch (NullReferenceException) { loaded = false; return; }
+            }
+            else if (!loaded) { updateDelayer = 2.5f; return; }
+            try
+            {
+                if (MonoSingleton<InputManager>.I.IsMouseButton0Down)
+                {            
+                    NetworkSingleton<TextChannelManager>.I.MainMovementController.GroundState = GroundState.Grounded;
+
+                    NetworkSingleton<TextChannelManager>.I.MainMovementController.MovementState = MovementState.Idle;
+                }
+                // autocatch
+
+                if (MonoSingleton<FishingManager>.I.FishingCont.GetAlert() && Plugin.configAutoCatch.Value)
+                {
+                    if ( clickDelayer <= 0 )
+                    {
+                        Traverse.Create(MonoSingleton<InputManager>.I).Property("IsMouseButton0Down").SetValue(true);
+                        clickDelayer = 0.0625f;
+                    }
+                    else clickDelayer -= Time.deltaTime;
+                }
+                // auto-recast
+                if (recastPos != Vector3.zero &&
+                    Plugin.configAutoRecast.Value &&
+                    MonoSingleton<FishingManager>.I.CurrentBait != BaitType.None &&
+                    MonoSingleton<FishingManager>.I.FishingState == FishingState.None &&
+                    MonoSingleton<FishingManager>.I.FishingCont.FishingRod.activeSelf)
+                {
+                    var _castIndicator = AccessTools.FieldRefAccess<FishingManager, Transform>("_castIndicator");
+                    _castIndicator(MonoSingleton<FishingManager>.I).gameObject.SetActive(value: true);
+                    _castIndicator(MonoSingleton<FishingManager>.I).transform.position = recastPos;
+                    
+                    Traverse.Create(MonoSingleton<FishingManager>.I).Property("FishingState").SetValue(FishingState.Casting);
+                    var _isWater = AccessTools.FieldRefAccess<FishingManager, bool>("_isWater");
+                    _isWater(MonoSingleton<FishingManager>.I) = true;
+                    Traverse.Create(MonoSingleton<InputManager>.I).Property("IsMouseButton0Up").SetValue(true);
+                }
+            }
+            catch (NullReferenceException)
+            {
+                updateDelayer = 2.5f;
+                loaded = false;
+                Debug.Log("fishtweaks loadin delayed");
+            }
+        }
+        [HarmonyPatch("FishMiniGameUpdate")]
+        [HarmonyPostfix]
+        public static void autoClickSnapon( FishingManager __instance)
+        {
+            // autocatch
+            if (Plugin.configAutoCatch.Value && checkClick(__instance))
+            {
+                if ( clickDelayer <= 0 )
+                {
+                    Traverse.Create(MonoSingleton<InputManager>.I).Property("IsMouseButton0Down").SetValue(true);
+                    clickDelayer = 0.03125f;
+                }
+                else clickDelayer -= Time.deltaTime;
             }
         }
         public static bool checkClick( FishingManager instance)
@@ -56,64 +130,6 @@ namespace FishingTweaks.patches
             }
             return false;
         }
-    }
-    [HarmonyPatch(typeof(FishingManager))]
-    public static class FishingPatch
-    {
-        public static float clickDelayer = 0f;
-        public static bool sendClick = false;
-        public static bool sendUpClick = false;
-        public static Vector3 recastPos = Vector3.zero;
-
-
-        [HarmonyPatch("Awake")]
-        [HarmonyPostfix]
-        public static void FishingTweaks(ref float ____catchWait, ref List<int> ____baitCounts)
-        {
-            ____catchWait = 60f;
-            if (Plugin.configInfiniteBait.Value)
-            {
-                for (int bait = 0; bait < ____baitCounts.Count; bait++)
-                {
-                    ____baitCounts[bait] = 40;
-                }
-            }
-        }
-        [HarmonyPatch("Update")]
-        [HarmonyPrefix]
-        public static void UpdateTweak( FishingManager __instance, ref Transform ____castIndicator )
-        {
-            if (MonoSingleton<InputManager>.I.IsMouseButton0Down)
-            {            
-                NetworkSingleton<TextChannelManager>.I.MainMovementController.GroundState = GroundState.Grounded;
-
-                NetworkSingleton<TextChannelManager>.I.MainMovementController.MovementState = MovementState.Idle;
-            }
-            // autocatch
-            if (__instance.FishingState == FishingState.MiniGame && Plugin.configAutoCatch.Value)
-            {
-                if ( clickDelayer <= 0 )
-                {
-                    sendClick = true;
-                    clickDelayer = 0.0625f;
-                }
-                else clickDelayer -= Time.deltaTime;
-            }
-            // auto-recast
-            if (recastPos != Vector3.zero &&
-                Plugin.configAutoRecast.Value &&
-                __instance.CurrentBait != BaitType.None &&
-                __instance.FishingState == FishingState.None &&
-                __instance.FishingCont.FishingRod.activeSelf)
-            {
-                ____castIndicator.gameObject.SetActive(value: true);
-                ____castIndicator.transform.position = recastPos;
-                Traverse.Create(__instance).Property("FishingState").SetValue(FishingState.Casting);
-                var _isWater = AccessTools.FieldRefAccess<FishingManager, bool>("_isWater");
-                _isWater(__instance) = true;
-                sendUpClick = true;
-            }
-        }
         [HarmonyPatch("CastFishingRod")]
         [HarmonyPrefix]
         public static void storePosition( ref Transform ____castIndicator )
@@ -127,8 +143,6 @@ namespace FishingTweaks.patches
         {
             recastPos = Vector3.zero;
         }
-        
-
     }
     [HarmonyPatch(typeof(TaskManager))]
     internal class FishingPatch2
@@ -148,6 +162,11 @@ namespace FishingTweaks.patches
     [HarmonyPatch(typeof(FishingController))]
     internal class KeepSizeInCheck
     {
+        /*[HarmonyPatch(typeof(FishingController), nameof(FishingController.IsReleaseButtonClicked), MethodType.Setter)]
+        [HarmonyPostfix]
+        public static void AddClickIfAuto( FishingController __instance )
+            { if (Plugin.configAutoCatch.Value) Traverse.Create(__instance).Property("IsReleaseButtonClicked").SetValue(true); }
+        */
         [HarmonyPatch("CatchFishRpc_Original_3")]
         [HarmonyPrefix]
         public static void Resizer( ref CaughtFish caughtFish )
@@ -225,6 +244,8 @@ namespace FishingTweaks.patches
                 {
                     _baitCounts[bait] = 40;
                 }
+                MonoSingleton<DataManager>.I.PlayerDataZip.BaitCounts = _baitCounts;
+                MonoSingleton<DataManager>.I.SavePlayerZipData();
             }
         }
     }
@@ -426,6 +447,8 @@ namespace FishingTweaks.patches
                     {
                         _baitCounts[bait] = 40;
                     }
+                    MonoSingleton<DataManager>.I.PlayerDataZip.BaitCounts = _baitCounts;
+                    MonoSingleton<DataManager>.I.SavePlayerZipData();
                 }
                 return false;
             }
