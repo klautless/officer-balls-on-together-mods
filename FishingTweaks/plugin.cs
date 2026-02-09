@@ -18,7 +18,7 @@ namespace FishingTweaks
         public static ConfigEntry<bool> configMuteFishingDuringFocus { get; private set; }
         public const string modGUID = "officerballs.FishingTweaks";
         public const string modName = "Fishing Tweaks";
-        public const string modVersion = "1.1.1.0";
+        public const string modVersion = "1.1.2.0";
 
         private Harmony harmony = new Harmony(modGUID);
 
@@ -32,7 +32,6 @@ namespace FishingTweaks
             harmony.PatchAll(typeof(FishingPatch2));
             harmony.PatchAll(typeof(GroundCheckPatch));
             harmony.PatchAll(typeof(KeepSizeInCheck));
-            harmony.PatchAll(typeof(ClickSender));
             harmony.PatchAll(typeof(AddCommands));
             harmony.PatchAll(typeof(BlockSounds));
             harmony.PatchAll(typeof(BlockSounds2));
