@@ -2,17 +2,12 @@ using HarmonyLib;
 using System;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
-
+using System.Text.RegularExpressions;
 using PurrNet;
 using System.Collections.Generic;
-using System.Text;
-using UnityEngine.UI;
-using UnityEngine.Windows;
 
 namespace ChatTweaks.patches
 {
-    
     [HarmonyPatch(typeof(TextChannelManager))]
     
     public class TextPatcher
@@ -61,6 +56,7 @@ namespace ChatTweaks.patches
         [HarmonyPrefix]
         public static bool MsgUIFix( string userName, string text, bool isLocal, int senderIndex, ref List<GameObject> ____messageObjectsLocal, ref List<GameObject> ____messageObjectsGlobal, ref TMP_Text ____textPrefab )
         {
+            string textdupe = text + "";
             TMP_Text tMP_Text = UnityProxy.Instantiate( ____textPrefab, isLocal ? MonoSingleton<UIManager>.I.TextContentLocalTransform : MonoSingleton<UIManager>.I.TextContentGlobalTransform);
             var stamp = Plugin.configUseTimeStamps.Value ? "[" + DateTime.Now.ToString("h:mm tt") + "]" : "";
             if ((Plugin.configLocalNoises.Value && isLocal) || Plugin.configGlobalNoises.Value )
@@ -72,10 +68,20 @@ namespace ChatTweaks.patches
             if (Plugin.configCleanUpChat.Value)
             {
                 cleaner = CleanText( userName, text );
-                text = cleaner[1];
+                textdupe = cleaner[1];
             }
+            var messageColors = ScriptableSingleton<GameSettings>.I.MessageOthersColors;
             string size = Plugin.configTextSize.Value.ToString();
-            tMP_Text.text = "<size=" + size + ">" + stamp + " <color=#" + ScriptableSingleton<GameSettings>.I.MessageOthersColors[senderIndex] + "ff>" + userName + "</color>:" + cleaner[0] + "<color=#" + Plugin.configColorWrap.Value + "> " + text;
+            string color = "";
+            if (senderIndex >= 0 && senderIndex < messageColors.Count)
+            {
+                if (ColorUtility.TryParseHtmlString(messageColors[senderIndex], out Color newcolor))
+                {
+                    color = ScriptableSingleton<GameSettings>.I.MessageOthersColors[senderIndex];
+                }
+                else color = "ffffff";
+            }
+            tMP_Text.text = "<size=" + size + "><color=#" + Plugin.configColorWrap.Value + "> " + stamp + " <color=#" + color + "ff>" + userName + "</color>:" + cleaner[0] + "<color=#" + Plugin.configColorWrap.Value + "> " + textdupe;
             if (isLocal)
             {
                 ____messageObjectsLocal.Add(tMP_Text.gameObject);
@@ -98,7 +104,6 @@ namespace ChatTweaks.patches
             }
             return false;
 
-
         }
         [HarmonyPatch("AddNotification")]
         [HarmonyPrefix]
@@ -108,207 +113,146 @@ namespace ChatTweaks.patches
             text = "<size=" + size + "><color=#" + Plugin.configSystemColorWrap.Value + ">" + text;
         }
 
-        [HarmonyPatch("OnEnterPressed")]
-        [HarmonyPrefix]
-        public static bool TextChecker()
-        {    
-            string text = MonoSingleton<UIManager>.I.MessageInput.text;
-            if (text == "/help")
-            {
-                FinishCmds(false);
-                Notify("/help chat for ChatTweaks commands");
-                return true;
-            }
-            if (text.ToLower() == "/help chat" || text.ToLower() == "/help chattweaks")
-            {
-                Notify("Available commands:");
-                Notify("/mutelocal");
-                Notify("/muteglobal");
-                Notify("/muteduringtimer");
-                Notify("/mutejoinleave");
-                Notify("/usetimestamps");
-                Notify("/disablechattags");
-
-                Notify("/textsize <color=#a83131>x</color>");
-                Notify("/textcolor <color=#9db143>123456</color>");
-                Notify("/systemcolor <color=#9db143>123456</color>");
-                Notify("/outlinecolor <color=#9db143>123456</color>");
-                Notify("/outlinewidth <color=#a83131>x.xx</color>");
-                Notify("/outlineopacity <color=#a83131>0-255</color>");
-                FinishCmds();
-                return false;
-            }
-            if (text.ToLower() == "/disablechattags")
-            {
-                Plugin.configCleanUpChat.Value = !Plugin.configCleanUpChat.Value;
-                string isMuted = Plugin.configCleanUpChat.Value ? "off" : "on";
-                Notify("Chat tags turned " + isMuted + ".");
-                FinishCmds();
-                return false;
-            }
-            if (text.ToLower() == "/mutelocal")
-            {
-                Plugin.configLocalNoises.Value = !Plugin.configLocalNoises.Value;
-                string isMuted = Plugin.configLocalNoises.Value ? "on" : "off";
-                Notify("Local message noises turned " + isMuted + ".");
-                FinishCmds();
-                return false;
-            }
-            if (text.ToLower() == "/muteduringtimer")
-            {
-                Plugin.configMuteDuringFocus.Value = !Plugin.configMuteDuringFocus.Value;
-                string isMuted = Plugin.configMuteDuringFocus.Value ? "on" : "off";
-                Notify("Mute during timer turned " + isMuted + ".");
-                FinishCmds();
-                return false;
-            }
-            if (text.ToLower() == "/muteglobal")
-            {
-                Plugin.configGlobalNoises.Value = !Plugin.configGlobalNoises.Value;
-                string isMuted = Plugin.configGlobalNoises.Value ? "on" : "off";
-                Notify("Global message noises turned " + isMuted + ".");
-                FinishCmds();
-                return false;
-            }
-            if (text.ToLower() == "/mutejoinleave")
-            {
-                Plugin.configJoinLeaveNoises.Value = !Plugin.configJoinLeaveNoises.Value;
-                string isMuted = Plugin.configJoinLeaveNoises.Value ? "on" : "off";
-                Notify("Join/leave noises turned " + isMuted + ".");
-                FinishCmds();
-                return false;
-            }
-            if (text.ToLower() == "/usetimestamps")
-            {
-                Plugin.configUseTimeStamps.Value = !Plugin.configUseTimeStamps.Value;
-                string isMuted = Plugin.configUseTimeStamps.Value ? "on" : "off";
-                Notify("Timestamps turned " + isMuted + ".");
-                FinishCmds();
-                return false;
-            }
-            if (text.Length >= 10) // /textcolor
-            {
-                if (text.Substring(0,10) == "/textcolor")
-                {
-                    if (text.Length >= 17)
-                    {
-                        Plugin.configColorWrap.Value = text.Substring(11, 6);
-                        Notify("Text color changed to <color=#" + Plugin.configColorWrap.Value + ">" + Plugin.configColorWrap.Value + "</color>.");
-                    }
-                    else Notify("Text color currently set to <color=#" + Plugin.configColorWrap.Value + ">" + Plugin.configColorWrap.Value + "</color>.");
-                    FinishCmds();
-                    return false;
-                }
-            }
-            if (text.Length >= 12) // /systemcolor
-            {
-                if (text.Substring(0,12) == "/systemcolor")
-                {
-                    if (text.Length >= 19)
-                    {
-                        Plugin.configSystemColorWrap.Value = text.Substring(13, 6);
-                        Notify("System text color changed to <color=#" + Plugin.configSystemColorWrap.Value + ">" + Plugin.configSystemColorWrap.Value + "</color>.");
-                    }
-                    else Notify("System text color currently set to <color=#" + Plugin.configSystemColorWrap.Value + ">" + Plugin.configSystemColorWrap.Value + "</color>.");
-                    FinishCmds();
-                    return false;
-                }
-            }
-            //outlinewidth, outlineopacity
-            if (text.Length >= 15) // /outlineopacity
-            {
-                if (text.Substring(0, 15) == "/outlineopacity")
-                {
-                    if (text.Length >= 17)
-                    {
-                        if (int.TryParse(text.Substring(16), out int output))
-                        {
-                            if (output < 0) output = 0;
-                            else if (output > 255) output = 255;
-                            Plugin.configOutlineOpacity.Value = output;
-                            Notify("Outline opacity changed to " + Plugin.configOutlineOpacity.Value.ToString() + ".");
-                            outlineChanger();
-                        }
-                        else Notify("Outline opacity currently set to " + Plugin.configOutlineOpacity.Value.ToString() + ".");
-                    }
-                    else Notify("Outline opacity currently set to " + Plugin.configOutlineOpacity.Value.ToString() + ".");
-                    FinishCmds();
-                    return false;
-                }
-            }
-            if (text.Length >= 13) // /outlinecolor, /outlinewidth
-            {
-                if (text.Substring(0,13) == "/outlinecolor")
-                {
-                    if (text.Length >= 20)
-                    {
-                        Plugin.configOutlineColor.Value = text.Substring(14, 6);
-                        Notify("Outline color changed to <color=#" + Plugin.configOutlineColor.Value + ">" + Plugin.configOutlineColor.Value + "</color>.");
-                        outlineChanger();
-                    }
-                    else Notify("Outline color currently set to <color=#" + Plugin.configOutlineColor.Value + ">" + Plugin.configOutlineColor.Value + "</color>.");
-                    FinishCmds();
-                    return false;
-                }
-                else if (text.Substring(0,13) == "/outlinewidth")
-                {
-                    if (text.Length >= 15)
-                    {
-                        if (float.TryParse(text.Substring(14), out float output))
-                        {
-                            Plugin.configOutlineWidth.Value = output;
-                            Notify("Outline width changed to " + Plugin.configOutlineWidth.Value.ToString() + ".");
-                            outlineChanger();
-                        }
-                        else Notify("Outline width currently set to " + Plugin.configOutlineWidth.Value.ToString() + ".");
-                    }
-                    else Notify("Outline width currently set to " + Plugin.configOutlineWidth.Value.ToString() + ".");
-                    FinishCmds();
-                    return false;
-                }
-            }
-            if (text.Length >= 9) // /textsize
-            {
-                if (text.Substring(0,9) == "/textsize")
-                {
-                    if (text.Length > 10)
-                    {
-                        if(int.TryParse(text.Substring(10), out int newsize))
-                        {
-                            Plugin.configTextSize.Value = newsize;
-                            Notify("Text size changed to " + Plugin.configTextSize.Value.ToString() + ".");
-                        }
-                        else Notify("Text size currently set to " + Plugin.configTextSize.Value.ToString() + ".");
-                    }
-                    else Notify("Text size currently set to " + Plugin.configTextSize.Value.ToString() + ".");
-                    FinishCmds();
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        public static void FinishCmds(bool clearText=true)
+        public static void ShowCommands( string[] args )
         {
-            MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-            EventSystem.current.SetSelectedGameObject(null);
-            if (clearText) MonoSingleton<UIManager>.I.MessageInput.text = "";
-        }
-        public static void Notify(string text) { NetworkSingleton<TextChannelManager>.I.AddNotification(text); }
+            CommandAPI.Utilities.Notify("Available commands:");
+            CommandAPI.Utilities.Notify("/mutelocal");
+            CommandAPI.Utilities.Notify("/muteglobal");
+            CommandAPI.Utilities.Notify("/muteduringtimer");
+            CommandAPI.Utilities.Notify("/mutejoinleave");
+            CommandAPI.Utilities.Notify("/usetimestamps");
+            CommandAPI.Utilities.Notify("/disablechattags");
 
-        [HarmonyPatch("SendMessageAsync")]
-        [HarmonyPrefix]
-        public static bool HelpCloser(byte[] textBytes)
+            CommandAPI.Utilities.Notify("/textsize <color=#a83131>x</color>");
+            CommandAPI.Utilities.Notify("/textcolor <color=#9db143>123456</color>");
+            CommandAPI.Utilities.Notify("/systemcolor <color=#9db143>123456</color>");
+            CommandAPI.Utilities.Notify("/outlinecolor <color=#9db143>123456</color>");
+            CommandAPI.Utilities.Notify("/outlinewidth <color=#a83131>x.xx</color>");
+            CommandAPI.Utilities.Notify("/outlineopacity <color=#a83131>0-255</color>");
+        }
+        public static void ToggleChatTags( string[] args )
+        {   Plugin.configCleanUpChat.Value = !Plugin.configCleanUpChat.Value;
+            CommandAPI.Utilities.Notify("Chat tags turned " + OnOff(Plugin.configCleanUpChat.Value)); }
+        public static void MuteLocal( string[] args)
+        {   Plugin.configLocalNoises.Value = !Plugin.configLocalNoises.Value;
+            CommandAPI.Utilities.Notify("Local message noises turned " + OnOff(Plugin.configLocalNoises.Value)); }
+        public static void MuteGlobal( string[] args)
+        {   Plugin.configGlobalNoises.Value = !Plugin.configGlobalNoises.Value;
+            CommandAPI.Utilities.Notify("Global message noises turned " + OnOff(Plugin.configGlobalNoises.Value)); }
+        public static void MuteDuringTimer( string[] args)
+        {   Plugin.configMuteDuringFocus.Value = !Plugin.configMuteDuringFocus.Value;
+            CommandAPI.Utilities.Notify("Mute during timer turned " + OnOff(Plugin.configMuteDuringFocus.Value)); }
+        public static void MuteJoinLeave( string[] args)
+        {   Plugin.configJoinLeaveNoises.Value = !Plugin.configJoinLeaveNoises.Value;
+            CommandAPI.Utilities.Notify("Join/leave noises turned " + OnOff(Plugin.configJoinLeaveNoises.Value)); }
+        public static void UseTimestamps( string[] args)
+        {   Plugin.configUseTimeStamps.Value = !Plugin.configUseTimeStamps.Value;
+            CommandAPI.Utilities.Notify("Timestamps turned " + OnOff(Plugin.configUseTimeStamps.Value)); }
+        
+        public static void TextColor( string[] args )
         {
-            string text = Encoding.Unicode.GetString(textBytes);
-            if(text == "/help") return false;
-            return true;
+            if( args.Length == 0 )
+            {
+                CommandAPI.Utilities.Notify("Text color currently set to <color=#" + Plugin.configColorWrap.Value + ">" + Plugin.configColorWrap.Value + "</color>.");
+                return;
+            }
+            if (args[0][0] == '#') args[0] = args[0].Substring(1);
+            if ( ValidateHex(args[0]) && args[0].Length >= 6 )
+            {
+                Plugin.configColorWrap.Value = args[0].Substring(0, 6);
+                CommandAPI.Utilities.Notify("Text color changed to <color=#" + Plugin.configColorWrap.Value + ">" + Plugin.configColorWrap.Value + "</color>.");
+            }
+            else CommandAPI.Utilities.Notify("Invalid color code. Use hexadecimal (HTML) only.");
+        }
+        public static void SystemColor( string[] args )
+        {
+            if( args.Length == 0 )
+            {
+                CommandAPI.Utilities.Notify("System text color currently set to <color=#" + Plugin.configSystemColorWrap.Value + ">" + Plugin.configSystemColorWrap.Value + "</color>.");
+                return;
+            }
+            if (args[0][0] == '#') args[0] = args[0].Substring(1);
+            if ( ValidateHex(args[0]) && args[0].Length >= 6 )
+            {
+                Plugin.configSystemColorWrap.Value = args[0].Substring(0, 6);
+                CommandAPI.Utilities.Notify("System text color changed to <color=#" + Plugin.configSystemColorWrap.Value + ">" + Plugin.configSystemColorWrap.Value + "</color>.");
+            }
+            else CommandAPI.Utilities.Notify("Invalid color code. Use hexadecimal (HTML) only.");
+        }
+        public static void OutlineColor( string[] args )
+        {
+            if( args.Length == 0 )
+            {
+                CommandAPI.Utilities.Notify("Outline color currently set to <color=#" + Plugin.configOutlineColor.Value + ">" + Plugin.configOutlineColor.Value + "</color>.");
+                return;
+            }
+            if (args[0][0] == '#') args[0] = args[0].Substring(1);
+            if ( ValidateHex(args[0]) && args[0].Length >= 6 )
+            {
+                Plugin.configOutlineColor.Value = args[0].Substring(0, 6);
+                CommandAPI.Utilities.Notify("Outline color changed to <color=#" + Plugin.configOutlineColor.Value + ">" + Plugin.configOutlineColor.Value + "</color>.");
+            }
+            else CommandAPI.Utilities.Notify("Invalid color code. Use hexadecimal (HTML) only.");
+        }
+        public static void OutlineWidth( string[] args )
+        {
+            if( args.Length == 0)
+            {
+                CommandAPI.Utilities.Notify("Outline width currently set to " + Plugin.configOutlineWidth.Value.ToString() + ".");
+                return;
+            }
+            if (float.TryParse(args[0], out float output))
+            {
+                Plugin.configOutlineWidth.Value = output;
+                CommandAPI.Utilities.Notify("Outline width changed to " + Plugin.configOutlineWidth.Value.ToString() + ".");
+                outlineChanger();
+            }
+            else CommandAPI.Utilities.Notify("Invalid input. Please try a float (example: 0.15)");
+        }
+        public static void OutlineOpacity( string[] args )
+        {
+            if( args.Length == 0 )
+            {
+                CommandAPI.Utilities.Notify("Outline opacity currently set to " + Plugin.configOutlineOpacity.Value.ToString() + ".");
+                return;
+            }
+            if (int.TryParse(args[0], out int output))
+            {
+                if (output < 0 || output > 255)
+                {
+                    CommandAPI.Utilities.Notify("Invalid input. Please use an integer from 0 to 255.");
+                    return;
+                }
+                Plugin.configOutlineOpacity.Value = output;
+                CommandAPI.Utilities.Notify("Outline opacity changed to " + Plugin.configOutlineOpacity.Value.ToString() + ".");
+                outlineChanger();
+            }
+            else CommandAPI.Utilities.Notify("Invalid input. Please use an integer from 0 to 255.");
+        }
+        public static void TextSize( string[] args )
+        {
+            if( args.Length == 0 )
+            {
+                CommandAPI.Utilities.Notify("Text size currently set to " + Plugin.configTextSize.Value.ToString() + ".");
+                return;
+            }
+            if (int.TryParse(args[0], out int output))
+            {
+                if (output < 0 || output > 255)
+                {
+                    CommandAPI.Utilities.Notify("Invalid input. Please use an integer from 0 to 255.");
+                    return;
+                }
+                Plugin.configTextSize.Value = output;
+                CommandAPI.Utilities.Notify("Text size changed to " + Plugin.configTextSize.Value.ToString() + ".");
+            }
+            else CommandAPI.Utilities.Notify("Invalid input. Please use an integer from 0 to 255.");
         }
 
         public static void outlineChanger()
         {
 
-            var fieldref = AccessTools.FieldRefAccess<UIManager, TextMeshProUGUI>("_messageTextForFont");
+            var fieldref = HarmonyLib.AccessTools.FieldRefAccess<UIManager, TextMeshProUGUI>("_messageTextForFont");
             var instance = MonoSingleton<UIManager>.I;
             
             Material mat = fieldref(instance).fontSharedMaterial;
@@ -327,7 +271,7 @@ namespace ChatTweaks.patches
 
             if (NetworkSingleton<TextChannelManager>.I.Islocal)
             {
-                var msgRef = AccessTools.FieldRefAccess<TextChannelManager, List<GameObject>>("_messageObjectsLocal");
+                var msgRef = HarmonyLib.AccessTools.FieldRefAccess<TextChannelManager, List<GameObject>>("_messageObjectsLocal");
                 foreach (GameObject item in msgRef(textinstance))
                 {
                     TMP_Text temp = item.GetComponent<TMP_Text>();
@@ -343,7 +287,7 @@ namespace ChatTweaks.patches
             }
             else
             {
-                var msgRef = AccessTools.FieldRefAccess<TextChannelManager, List<GameObject>>("_messageObjectsGlobal");
+                var msgRef = HarmonyLib.AccessTools.FieldRefAccess<TextChannelManager, List<GameObject>>("_messageObjectsGlobal");
                 foreach (GameObject item in msgRef(textinstance))
                 {
                     TMP_Text temp = item.GetComponent<TMP_Text>();
@@ -358,5 +302,9 @@ namespace ChatTweaks.patches
                 }
             }
         }
+        public static string OnOff(bool value) { return value ? "on." : "off."; }
+        public static bool ValidateHex( string input)
+        {   string pattern = @"^[0-9a-fA-F]+$";
+            return Regex.IsMatch(input, pattern); }
     }
 }
