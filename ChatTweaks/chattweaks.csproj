@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net46</TargetFramework>
     <AssemblyName>officerballs.ChatTweaks</AssemblyName>
-    <Version>1.0.8</Version>
+    <Version>1.1.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <RootNamespace>ChatTweaks</RootNamespace>
@@ -11,6 +11,7 @@
   <ItemGroup>
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/BepInEx/core/0Harmony.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/BepInEx/core/BepInEx.dll" />
+    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/BepInEx/plugins/CommandAPI.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/OnTogether_Data/Managed/Assembly-CSharp.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/OnTogether_Data/Managed/Assembly-CSharp-firstpass.dll" />
     <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/OnTogether_Data/Managed/DOTween.dll" />
