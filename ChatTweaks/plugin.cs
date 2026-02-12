@@ -3,6 +3,8 @@ using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using ChatTweaks.patches;
+using CommandAPI;
+using System.Collections.Generic;
 
 namespace ChatTweaks
 {
@@ -24,13 +26,66 @@ namespace ChatTweaks
 
         public const string modGUID = "officerballs.chatTweaks";
         public const string modName = "Chat Tweaks";
-        public const string modVersion = "1.0.8.0";
+        public const string modVersion = "1.1.0.0";
 
         private Harmony harmony = new Harmony(modGUID);
 
         public ManualLogSource mls = BepInEx.Logging.Logger.CreateLogSource(modGUID);
 
+        public List<CommandInfo> commands = [
+            new CommandInfo(
+                "chatcommands", "ChatTweaks", TextPatcher.ShowCommands,
+                "Shows all available chat commands.", null),
+            new CommandInfo(
+                "togglechattags", "ChatTweaks", TextPatcher.ToggleChatTags,
+                "Disable all richtext tags in chat.", null),
+            new CommandInfo(
+                "togglelocalnoise", "ChatTweaks", TextPatcher.MuteLocal,
+                "Toggles local chat message noises.", null),
+            new CommandInfo(
+                "toggleglobalnoise", "ChatTweaks", TextPatcher.MuteGlobal,
+                "Toggles global chat message noises.", null),
+            new CommandInfo(
+                "toggletimermute", "ChatTweaks", TextPatcher.MuteDuringTimer,
+                "Mutes all chat while timer is running.", null),
+            new CommandInfo(
+                "mutejoinleave", "ChatTweaks", TextPatcher.MuteJoinLeave,
+                "Toggles join/leave noises.", null),
+            new CommandInfo(
+                "usetimestamps", "ChatTweaks", TextPatcher.UseTimestamps,
+                "Enable or disable chat timestamps.", null),
 
+            new CommandInfo(
+                "textcolor", "ChatTweaks", TextPatcher.TextColor,
+                "Sets the override color for chat text.",
+                new Parameter[] { new Parameter("color", ParameterType.String, true) }
+            ),
+            new CommandInfo(
+                "systemcolor", "ChatTweaks", TextPatcher.SystemColor,
+                "Sets the color for system messages.",
+                new Parameter[] { new Parameter("color", ParameterType.String, true) }
+            ),
+            new CommandInfo(
+                "outlinecolor", "ChatTweaks", TextPatcher.OutlineColor,
+                "Sets the outline color for chat text.",
+                new Parameter[] { new Parameter("color", ParameterType.String, true) }
+            ),
+
+            new CommandInfo(
+                "outlinewidth", "ChatTweaks", TextPatcher.OutlineWidth,
+                "Sets the outline width for chat text.",
+                new Parameter[] { new Parameter("width", ParameterType.Float, true) }
+            ),
+            new CommandInfo(
+                "outlineopacity", "ChatTweaks", TextPatcher.OutlineOpacity,
+                "Sets the outline opacity for chat text.",
+                new Parameter[] { new Parameter("opacity", ParameterType.Int, true, 0, 255) }
+            ),
+            new CommandInfo(
+                "textsize", "ChatTweaks", TextPatcher.TextSize,
+                "Sets the size for chat text.",
+                new Parameter[] { new Parameter("size", ParameterType.Int, true, 0, 255) }
+            )];
 
         void Awake()
         {
@@ -55,8 +110,17 @@ namespace ChatTweaks
             configUseTimeStamps = Config.Bind("General","UseTimestamps", true, "Whether to use timestamps in chat.");
             configCleanUpChat = Config.Bind("General", "DisableChatTags", true, "Removes all effects from text messages.");
 
+            foreach (CommandInfo command in commands)
+            {
+                CommandAPI.CommandRegistry.Register(
+                    command.Name,
+                    command.Category,
+                    command.Handler,
+                    command.Description,
+                    command.Parameters
+                );
+            }
             mls.LogInfo("Chat tweaked");
         }
-
     }
 }
