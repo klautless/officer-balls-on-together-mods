@@ -81,7 +81,7 @@ namespace ChatTweaks.patches
                 }
                 else color = "ffffff";
             }
-            tMP_Text.text = "<size=" + size + "><color=#" + Plugin.configColorWrap.Value + "> " + stamp + " <color=#" + color + "ff>" + userName + "</color>:" + cleaner[0] + "<color=#" + Plugin.configColorWrap.Value + "> " + textdupe;
+            tMP_Text.text = "<size=" + size + "><color=#" + color + "> " + stamp + userName + "</color>:" + cleaner[0] + "<color=#" + Plugin.configColorWrap.Value + "> " + textdupe;
             if (isLocal)
             {
                 ____messageObjectsLocal.Add(tMP_Text.gameObject);
