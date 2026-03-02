@@ -1,5 +1,8 @@
 
+using UnityEngine;
 using HarmonyLib;
+using _otAPI;
+using System.Reflection;
 
 namespace ChatTweaks.patches
 {
@@ -14,6 +17,10 @@ namespace ChatTweaks.patches
             {
                 NetworkSingleton<TextChannelManager>.I.MainSFXController.PlayPetSound(PetType.FisherBirdy);
             }
+            /*new UIImage( Assembly.GetExecutingAssembly(), "chatTweaks/images/smile.png",
+                new Vector2Int( 384,384 ),
+                Vector2.zero, " smiley",
+                out GameObject image );*/
         }
 
     }
