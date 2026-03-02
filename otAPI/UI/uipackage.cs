@@ -86,10 +86,6 @@ namespace _otAPI {
             get => _width ?? 0.33f;
             set => _width = Mathf .Clamp01 ( value );
         }
-        private float ? _length; public float Length {
-            get => _length ?? 0.2f;
-            set => _length = Mathf .Clamp01 ( value );
-        }
         private float ? _spacing; public float Spacing {
             get => _spacing ?? 0.8f;
             set => _spacing = Mathf .Max ( value, 0f );

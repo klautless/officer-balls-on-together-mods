@@ -7,6 +7,7 @@ namespace _otAPI {
         internal string shortName { get; private set; } //Shortend name for menus
         internal string author { get; private set; } //Author of the depot
         internal string description { get; private set; } //Description of what this alias group does
+        internal List < UITheme > themelist { get; private set; } = new ( ); //
 
         internal UIPackage ? app; internal bool UsesApp = false;
         internal UIPackage ? icon; internal bool UsesIcon = false;
@@ -32,7 +33,8 @@ namespace _otAPI {
             string Description,
             string Prefix,
             UIPackage App,
-            UIPackage Icon
+            UIPackage Icon,
+            List < UITheme > ThemeList = null
         ) {
             name = Name;
             shortName = ShortName;
@@ -41,6 +43,7 @@ namespace _otAPI {
             prefix = Prefix;
             app = App;
             icon = Icon;
+            if ( ThemeList != null ) themelist = ThemeList;
             UsesApp = true; UsesIcon = true;
         }
         public bool GetAlias(string name, out Alias alias) {

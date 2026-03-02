@@ -49,7 +49,8 @@ namespace _otAPI {
             string Description,
             string Prefix,
             UIPackage App,
-            UIPackage Icon
+            UIPackage Icon,
+            List < UITheme > ThemeList = null
         ) {
             if ( !Regex.IsMatch ( Name, @"^[\p{L}\s'-]+$" ) ) {
                 Debug .Log ( $"{ errPrefix }Bad Depot name! Only letters, spaces, hyphens, and apostrophes allowed." );
@@ -73,7 +74,7 @@ namespace _otAPI {
                     return null;
                 }
             }
-            Depot depot = new Depot( Name, ShortName, Author, Description, Prefix, App, Icon );
+            Depot depot = new Depot( Name, ShortName, Author, Description, Prefix, App, Icon, ThemeList );
             depots .Add ( depot );
             Debug .Log ( $"otAPI Depot created: { depot .name }" );
             return depot;

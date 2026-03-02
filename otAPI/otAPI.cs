@@ -59,6 +59,7 @@ namespace _otAPI {
 
         public static Canvas Canvas { get; internal set; }
         public static float ScaleFactor { get; internal set; }
+        public static List < UITheme > themes { get; internal set; }
         public static UITheme Theme { get; internal set; }
         public static Dictionary < string, AppStack > AppList { get; internal set; } = new ( );
         public static GameObject rootHUD { get; internal set; }
@@ -196,24 +197,8 @@ namespace _otAPI {
         internal static IEnumerator Initializer ( ) {
             Canvas = GameObject .Find ( "Canvas" ) .GetComponent < Canvas > ( );
             ScaleFactor = Canvas .scaleFactor;
-            if ( Theme == null ) {
-                foreach ( UITheme t in themes ) {
-                    if ( $"{ t .author }:{ t .name }" == phone_lastTheme .Value ) {
-                        Theme = t;
-                        break;
-                    }
-                }
-            }
-            if ( Theme == null ) Theme = themes .FirstOrDefault ( );
-            if ( !sortedYet ) {
-                List < Depot > sortedDepots = depots
-                    .OrderBy ( p => p .author )
-                    .ThenBy ( p => p .shortName )
-                    .ToList ( )
-                ;
-                depots = sortedDepots;
-                sortedYet = true;
-            }
+
+            
             AppList .Clear ( );
             AppList .Add ( appID, new AppStack ( ) );
             
@@ -245,9 +230,17 @@ namespace _otAPI {
                 new KeyValuePair < string, UIPackage >
                 ( appID, modPhone )
             );
+            foreach ( UITheme T in default_themes ) {
+                themes .Add ( T );
+            }
             foreach ( Depot depot in depots ) {
                 if ( depot .app != null ) {
                     AppList .Add ( depot .name, new AppStack ( ) );
+                    if ( depot .themelist != null ) {
+                        foreach ( UITheme T in depot .themelist ) {
+                            themes .Add ( T );
+                        }
+                    }
                     if ( depot .app != null) {
                         UIPackage import = ( UIPackage ) depot .app;
                         Dictionary < string, UIPackage > prefabs = new ( );
@@ -287,6 +280,25 @@ namespace _otAPI {
                     );
                 }
             }
+
+            if ( Theme == null ) {
+                foreach ( UITheme t in themes ) {
+                    if ( $"{ t .author }:{ t .name }" == phone_lastTheme .Value ) {
+                        Theme = t;
+                        break;
+                    }
+                }
+            }
+            if ( Theme == null ) Theme = themes .FirstOrDefault ( );
+            //if ( !sortedYet ) {
+            List < Depot > sortedDepots = depots
+                .OrderBy ( p => p .author )
+                .ThenBy ( p => p .shortName )
+                .ToList ( )
+            ;
+            depots = sortedDepots;
+                //sortedYet = true;
+            //}
             ConstructionRoutine = RunCoroutine ( Construction ( ), true );
             if ( ConstructionRoutine != null ) {
                 while ( ConstructionRoutine .MoveNext ( ) ) {

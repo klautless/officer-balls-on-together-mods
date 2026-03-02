@@ -17,7 +17,7 @@ namespace _otAPI {
             { "system", new Color ( 0.3647f, 0.6902f, 0.6706f ) },
             { "systemhover", new Color ( 0.4157f, 0.6118f, 0.7059f ) }
         };
-        internal static List < UITheme > themes = new ( ) {
+        internal static List < UITheme > default_themes = new ( ) {
             new (
                 "meteorite", "ob",
                 "#0f241d", "#323240", "#443e4f", "#b0a9a0",
