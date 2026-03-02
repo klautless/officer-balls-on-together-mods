@@ -55,13 +55,14 @@ namespace _otAPI {
             Position = new Vector2 ( 0.5f, 0.2f ),
             Channel1 = ThemeChannel .Border,
             Radius = 0.4f,
-            StartInactive = true,
+            //StartInactive = true,
+            BuildOffscreen = true,
             Aspect = new ( ) {
                 Mode = AspectGroup .Modes .HeightControlsWidth,
                 Ratio = 0.57f
             },
-            PostBuild = ( ) => {
-                AppList [ appID ] .UI [ appID ] .transform .localPosition = phone_lastPosition .Value;
+            PostBuild = async ( locker ) => {
+                await AppList [ appID ] .Tasks [ "check construction" ] .Run ( );
 
                 UIPackage HP = AppList [ appID ] .Prefabs [ homePage ] with {
                     Parent = AppList [ appID ] .UI [ contents ],
@@ -104,11 +105,9 @@ namespace _otAPI {
                 AppList [ appID ] .UI [ "Back Button" ]
                     .transform .GetChild ( 0 ) .gameObject
                     .SetActive ( false );
-                /*if ( !AppList [ appID ] .UI .ContainsKey ( homePage ) ) {
-                        UIPackage HomePage = AppList [ appID ] .Prefabs [ homePage ];
-                        RunCoroutine ( QueueJob ( KeyValuePair .Create ( appID, HomePage ) ) );
-                    }*/
-                RunCoroutine ( CreateAppIcon (
+                appIcons .Add ( modPhoneIconPackage );
+                locker .SetResult ( true );
+                /*RunCoroutine ( CreateAppIcon (
                     modPhoneIconPackage, null, ( ) => {
                         if ( !AppList [ appID ] .UI .ContainsKey ( homePage ) ) {
                                 UIPackage HomePage = AppList [ appID ] .Prefabs [ homePage ];
@@ -116,7 +115,7 @@ namespace _otAPI {
                             }
                         } 
                     )
-                );
+                );*/
             },
             Children = new ( ) {
                 new ( ) {
@@ -129,7 +128,7 @@ namespace _otAPI {
                     Channel2 = ThemeChannel .Hover,
                     Type = UIType .Button,
                     Action = async ( ) => {
-                        await AppList [ appID ] .Tasks [ "check construction" ] .Run ( );
+                        await AppList [ appID ] .Tasks [ "check tasks" ] .Run ( );
                         await AppList [ appID ] .Tasks [ "home menu" ] .Run ( );
                     }
                 },
@@ -156,7 +155,7 @@ namespace _otAPI {
                                 }
                             },
                             Action = async ( ) => {
-                                await AppList [ appID ] .Tasks [ "check construction" ] .Run ( );
+                                await AppList [ appID ] .Tasks [ "check tasks" ] .Run ( );
                                 switch ( AppList [ appID ] .Strings [ "backbutton_target" ] ) {
                                     case "none": break;
                                     case "home":
@@ -315,10 +314,11 @@ namespace _otAPI {
                                             AppList [ appID ] .UI [ "Back Button" ]
                                                 .transform .GetChild ( 0 ) .gameObject
                                                 .SetActive ( true );
-                                            RunCoroutine ( QueueJob ( KeyValuePair .Create ( appID, AppList [ appID ] .Prefabs [ "Depot List"] ), ( ) => {
+                                            RunCoroutine ( QueueJob ( KeyValuePair .Create ( appID, AppList [ appID ] .Prefabs [ "Depot List"] ), ( _locker ) => {
                                                         AppList [ appID ] .UI [ "Back Button" ]
                                                             .transform .GetChild ( 0 ) .gameObject
                                                             .SetActive ( false );
+                                                        _locker .SetResult ( true );
                                                     }
                                                 )
                                             );
@@ -972,6 +972,92 @@ namespace _otAPI {
                     }
                 },
                 {
+                    "setup_stringsetting", new ( ) {
+                        Action = async ( ) => {
+                            await AppList [ appID ] .Tasks [ "check construction" ] .Run ( );
+                            GameObject _this = AppList [ appID ] .Buffer .Get;
+                            if ( _this == null ) return;
+                            UIPanel This = _this .GetComponent < UIPanel > ( );
+                            if ( This == null ) return;
+                            if ( This .transform .childCount < 5 ) { Debug .Log ( $"otAPI: menu interrputed!" ); return; }
+                            UIInput Input = This .transform .GetChild ( 0 ) .GetComponent < UIInput > ( );
+                            UIPanel Cancel = This .transform .GetChild ( 1 ) .GetComponent < UIPanel > ( ); 
+                            UIPanel Apply = This .transform .GetChild ( 2 ) .GetComponent < UIPanel > ( ); 
+                            UIText Name = This .transform .GetChild ( 3 ) .GetComponent < UIText > ( ); 
+                            UIText Info = This .transform .GetChild ( 4 ) .GetComponent < UIText > ( ); 
+                            if ( Input == null || Cancel == null || Apply == null || Name == null || Info == null ) return;
+
+                            UIPackage UIP = This .UIP;
+                            int Index = -1;
+                            if ( UIP .Ints == null ) return; else {
+                                if ( UIP .Ints .ContainsKey ( "depot_index" ) ) Index = UIP .Ints [ "depot_index" ];
+                            }
+                            if ( Index == -1 ) return;
+                            string Target = $"{ _this .name }";
+                            if ( Target == "" ) return;
+                            Depot depot = depots [ Index ];
+                            Alias alias = null;
+                            if ( depot == null ) return;
+                            string name = "";
+                            string info = "";
+                            CfgLink link = null;
+                            if ( !depot .aliases .ContainsKey ( Target ) ) return; else {
+                                name = $"{ depot .aliases [ Target ] .name }";
+                                info = $"{ depot .aliases [ Target ] .description }";
+                                link = depot .aliases [ Target ] .cfgLink;
+                                alias = depot .aliases [ Target ];
+                            }
+                            if ( alias == null ) return;
+                            if ( Name .Text == null ) return; else {
+                                Name .Text .overflowMode = TextOverflowModes .Ellipsis;
+                                Name .SetString ( name );
+                            }
+                            if ( Info .Text == null ) return; else {
+                                Info .Text .overflowMode = TextOverflowModes .Masking;
+                                Info .Text .textWrappingMode = TextWrappingModes .Normal;
+                                Info .SetString ( info );
+                            }
+                            if ( Input .input == null ) return; else {
+                                Input .input .characterLimit = UIP .CharacterLimit;
+                                Input .placeholder .text = link .stringLink .Value;
+                            }
+                            if ( Cancel == null ) return; else {
+                                Cancel .CreateHoverBehavior ( UIP .Theme, Cancel .mainChannel, Cancel .hoverChannel );
+                                GameObject CaGo = Cancel . gameObject;
+                                if ( CaGo == null ) return; else {
+                                    AddClickAction ( CaGo, ( ) => {
+                                            if ( Input == null ) return; else {
+                                                if ( Input .input == null ) return; else {
+                                                    Input .input .text = link .stringLink .Value;
+                                                }
+                                            }
+                                        }
+                                    );
+                                }
+                            }
+                            if ( Apply == null ) return; else {
+                                Apply .CreateHoverBehavior ( UIP .Theme, Apply .mainChannel, Apply .hoverChannel );
+                                GameObject ApOj = Apply .gameObject;
+                                if ( ApOj == null ) return; else {
+                                    AddClickAction ( ApOj, ( ) => {
+                                            if ( Input == null ) return;
+                                            link .stringLink .Value = Input .input .text;
+                                            Notify ( $"{ name } { link .changeString } { link .stringLink .Value }." );
+                                            Input .placeholder .text = link .stringLink .Value;
+                                        }
+                                    );
+                                }
+                            }
+                            if ( Input == null ) return; else { if ( Input .input == null ) return; else {
+                                    Input .input .text = link .stringLink .Value;
+                                }
+                            }
+                            _this .SetActive ( true );
+                            This .UIP = default;
+                        }
+                    }
+                },
+                {
                     "shrink menu", new ( ) {
                         Action = async ( ) => {
                             bool ifFullSize = !AppList [ appID ] .Bools [ "submenu_resize" ];
@@ -1005,6 +1091,18 @@ namespace _otAPI {
                                     futureSize,
                                     0.1f
                                 );
+                            }
+                        }
+                    }
+                },
+                {
+                    "check tasks", new ( ) {
+                        Action = async ( ) => {
+                            if ( AppList [ appID ] .runners .Count > 0 ) {
+                                AppList [ appID ] .runners .RemoveAll ( r => r .Task .IsCompleted );
+                                foreach ( TaskCompletionSource < bool > runner in AppList [ appID ] .runners ) {
+                                    await runner .Task;
+                                }
                             }
                         }
                     }
@@ -1067,7 +1165,7 @@ namespace _otAPI {
                                 ImgScale = 96f
                             }
                         },
-                        PostBuild = ( ) => {
+                        PostBuild = ( locker ) => {
                             GameObject depotApp = AppList [ appID ] .UI [ "Depot App" ];
                             GameObject recolorApp = AppList [ appID ] .UI [ "Retheme App" ];
                             GameObject settingsApp = AppList [ appID ] .UI [ "Phone Settings App" ];
@@ -1111,6 +1209,7 @@ namespace _otAPI {
                                     }
                                 }
                             );
+                            locker .SetResult ( true );
                         }
                     }
                 },
@@ -1120,7 +1219,7 @@ namespace _otAPI {
                         Mark = true,
                         Size = Vector2 .one,
                         Channel1 = ThemeChannel .Clear,
-                        PostBuild = async ( ) => {
+                        PostBuild = async ( locker ) => {
                             AppList [ appID ] .UI [ "Back Button" ]
                                 .transform .GetChild ( 0 ) .gameObject
                                 .SetActive ( true );
@@ -1180,10 +1279,7 @@ namespace _otAPI {
                                                             ObjectName = $"depotpage_{ dname }",
                                                             String = $"{ _index }"
                                                         };
-                                                        RunCoroutine ( QueueJob ( KeyValuePair .Create (  appID, job ), async ( ) => {
-                                                                }
-                                                            )
-                                                        );
+                                                        RunCoroutine ( QueueJob ( KeyValuePair .Create ( appID, job ) ) );
                                                     }
                                                 }
                                             )
@@ -1196,8 +1292,9 @@ namespace _otAPI {
                                 };
                                 _build [ _build .Count - 1 ] .Children [ 0 ] = __DL; 
                             }
-                            RunCoroutine ( QueueJobs ( KeyValuePair .Create (  appID, _build ), ( ) => {
+                            RunCoroutine ( QueueJobs ( KeyValuePair .Create (  appID, _build ), ( _locker ) => {
                                         waiter .SetResult ( true );
+                                        _locker .SetResult ( true );
                                     } 
                                 ), appID
                             );
@@ -1207,6 +1304,7 @@ namespace _otAPI {
                                 .transform .GetChild ( 0 ) .gameObject
                                 .SetActive ( false );
                             await Task .Delay ( 25 );
+                            locker .SetResult ( true );
                         }
                     }
                 },
@@ -1231,7 +1329,7 @@ namespace _otAPI {
                         StorePackage = true,
                         Size = Vector2 .one,
                         Channel1 = ThemeChannel .Clear,
-                        PostBuild = async ( ) => {
+                        PostBuild = async ( locker ) => {
                             AppList [ appID ] .UI [ "Back Button" ]
                                 .transform .GetChild ( 0 ) .gameObject
                                 .SetActive ( true );
@@ -1318,11 +1416,21 @@ namespace _otAPI {
                                         };
                                         jobs .Add ( IntPkg );
                                         continue;
+                                    case ArgType .String:
+                                        UIPackage StringPkg = AppList [ appID ] .Prefabs [ "String Setting" ] with {
+                                            Parent = AppList [ appID ] .UI [ $"depotpage_{ name }" ],
+                                            ObjectName = $"{ A .Key }",
+                                            ScrollRect = AppList [ appID ] .UI [ contents ]
+                                            .GetComponent < ScrollTunnel > ( ) .ScrollRect,
+                                            Ints = new ( ) { { "depot_index", value } }
+                                        };
+                                        jobs .Add ( StringPkg );
+                                        continue;
                                     
                                 }
                                 //Debug .Log ( $"{ a .Key }, { a .Value .name }: { a .Value .description }" );
                             }
-                            RunCoroutine ( QueueJobs ( KeyValuePair .Create ( appID, jobs ), async ( ) => {
+                            RunCoroutine ( QueueJobs ( KeyValuePair .Create ( appID, jobs ), async ( _locker ) => {
                                         for ( int d = 0; d < This .transform .childCount; d ++ ) {
                                             int D = d;
                                             GameObject child = This .transform .GetChild ( D ) .gameObject;
@@ -1348,7 +1456,10 @@ namespace _otAPI {
                                                         case ArgType .Int:
                                                             await AppList [ appID ] .Tasks [ "setup_intsetting" ] .Run ( );
                                                             break;
-                                                    } 
+                                                        case ArgType .String:
+                                                            await AppList [ appID ] .Tasks [ "setup_stringsetting" ] .Run ( );
+                                                            break;
+                                                    }
                                                 }
                                             }
                                         }
@@ -1363,6 +1474,7 @@ namespace _otAPI {
                                             0.1f
                                         );
                                         waiter .SetResult ( true );
+                                        _locker .SetResult ( true );
                                     }
                                 )
                             );
@@ -1372,6 +1484,7 @@ namespace _otAPI {
                                 .transform .GetChild ( 0 ) .gameObject
                                 .SetActive ( false );
                             await Task .Delay ( 25 );
+                            locker .SetResult ( true );
                         },
                         Children = new ( )
                         {
@@ -1720,12 +1833,76 @@ namespace _otAPI {
                     }
                 },
                 {
+                    "String Setting", new ( ) {
+                        ObjectName = "String Setting",
+                        Size = new Vector2 ( 0.85f, 0.24f ),
+                        Radius = 0.36f,
+                        Expands = false,
+                        StartInactive = true,
+                        StorePackage = true,
+                        Channel1 = ThemeChannel .Header,
+                        Children = new ( ) {
+                            new ( ) {
+                                ObjectName = "Input",
+                                Type = UIType .Input,
+                                Placeholder = "0",
+                                Unclamped = true,
+                                Width = 0.85f,
+                                Size = new Vector2 ( 0.2f, 0.2f ),
+                                Position = new Vector2 ( 0f, -0.7f )
+                            }, new ( ) {
+                                ObjectName = "Cancel",
+                                Position = new Vector2 ( 0.67f, 0.55f ),
+                                Size = new Vector2 ( 0.2f, 0.18f ),
+                                Radius = 0.8f,
+                                Channel1 = ThemeChannel .Button,
+                                Channel2 = ThemeChannel .Hover,
+                                Children = new ( ) {
+                                    new ( ) {
+                                        Type = UIType .Text,
+                                        String = "<align=center>Cancel",
+                                        TextSize = 24
+                                    }
+                                }
+                            },new ( ) {
+                                ObjectName = "Apply",
+                                Position = new Vector2 ( 0.67f, 0.07f ),
+                                Size = new Vector2 ( 0.2f, 0.18f ),
+                                Radius = 0.8f,
+                                Channel1 = ThemeChannel .Button,
+                                Channel2 = ThemeChannel .Hover,
+                                Children = new ( ) {
+                                    new ( ) {
+                                        Type = UIType .Text,
+                                        String = "<align=center>Apply",
+                                        TextSize = 24
+                                    }
+                                }
+                            }, new ( ) {
+                                ObjectName = "Setting Name",
+                                Type = UIType .Text,
+                                String = "Loading...",
+                                TextSize = 42,
+                                Size = new Vector2 ( 0.62f, 0.38f ),
+                                Position = new Vector2 ( -0.75f, 0.8f )
+                            }, new ( ) {
+                                ObjectName = "Setting Description",
+                                Type = UIType .Text,
+                                String = "Loading...",
+                                TextSize = 32,
+                                Size = new Vector2 ( 0.62f, 0.4f ),
+                                Position = new Vector2 ( -0.75f, -0.05f )
+                            }
+                        }
+                    }
+                },
+                {
                     "Theme List", new ( ) {
                         ObjectName = "Theme List",
                         Mark = true,
                         Size = Vector2 .one,
                         Channel1 = ThemeChannel .Clear,
-                        PostBuild = async ( ) => {
+                        PostBuild = async ( locker ) => {
                             AppList [ appID ] .UI [ "Back Button" ]
                                 .transform .GetChild ( 0 ) .gameObject
                                 .SetActive ( true );
@@ -1758,7 +1935,7 @@ namespace _otAPI {
                                 };
                                 _build [ T ] = __TT;
                             }
-                            RunCoroutine ( QueueJobs ( KeyValuePair .Create (  appID, _build ), async ( ) => {
+                            RunCoroutine ( QueueJobs ( KeyValuePair .Create (  appID, _build ), async ( _locker ) => {
                                         await AppList [ appID ] .Tasks [ "check construction" ] .Run ( );
                                         for ( int f = 0; f < themes .Count; f++ ) {
                                             int F = f;
@@ -1784,7 +1961,7 @@ namespace _otAPI {
                                                     if ( AppList [ appID ] . UI [ appID ] != null ) {
                                                         AppList [ appID ] . UI [ appID ]
                                                             .GetComponent < UIPanel > ( )
-                                                            .Retheme ( theme, true, appID )
+                                                            .Retheme ( theme )
                                                         ;
                                                         Theme = theme;
                                                         phone_lastTheme .Value = $"{ theme .author }:{ theme .name }";
@@ -1792,12 +1969,14 @@ namespace _otAPI {
                                                     if ( mainTray != null ) {
                                                         mainTray .trayPanel .Retheme ( theme );
                                                     }
+                                                    ThemeChange .Invoke ( theme );
                                                     Notify ( $"System theme set to { theme .name }." );
                                                 }
                                             );
                                         }
                                         AppList [ appID ] .Bools [ "themelist_setup" ] = true;
                                         waiter .SetResult ( true );
+                                        _locker .SetResult ( true );
                                     }
                                 ),appID
                             );
@@ -1806,6 +1985,7 @@ namespace _otAPI {
                                 .transform .GetChild ( 0 ) .gameObject
                                 .SetActive ( false );
                             await Task .Delay ( 25 );
+                            locker .SetResult ( true );
                         }
                         
                     }
@@ -1908,7 +2088,7 @@ namespace _otAPI {
                                 
                             }
                         },
-                        PostBuild = async ( ) => {
+                        PostBuild = async ( locker ) => {
                             AppList [ appID ] .UI [ "Back Button" ]
                                 .transform .GetChild ( 0 ) .gameObject
                                 .SetActive ( true );
@@ -1967,7 +2147,7 @@ namespace _otAPI {
                                 }
                             );
                             Cancel .CreateHoverBehavior ( UIP .Theme, Cancel .mainChannel, Cancel .hoverChannel );
-                            AddClickAction ( Cancel .gameObject, async ( ) => {
+                            AddClickAction ( Cancel .gameObject, ( ) => {
                                     if ( Slider == null || Input == null ) return; else {
                                         Slider .slider .value = phone_Scale .Value;
                                     }
@@ -1991,7 +2171,7 @@ namespace _otAPI {
                             }
                             GameObject horiButtons = Canvas .transform .Find ( "Mask_Horizontal/Panel_ProductivityButtons" ) .gameObject;
                             GameObject vertButtons = Canvas .transform .Find ( "Mask_Vertical/Panel_ProductivityButtons" ) .gameObject;
-                            RunCoroutine ( QueueJobs ( KeyValuePair .Create ( appID, jobs ), async ( ) => {
+                            RunCoroutine ( QueueJobs ( KeyValuePair .Create ( appID, jobs ), async ( _locker ) => {
                                         string Format ( string In ) {
                                             System .Text .StringBuilder oot = new ( );
                                             oot .Append ( In [ 0 ] );
@@ -2015,6 +2195,13 @@ namespace _otAPI {
                                             if ( AppName == null || MoveUp == null || MoveDown == null || Hide == null ) continue;
                                             
                                             string processedName = Format ( child .name .Substring ( 7 ) );
+                                            GameObject activeCheck = pButtons .transform .Find ( child .name ) .gameObject;
+                                            if ( !AppList [ appID ] .Bools .ContainsKey ( $"showapp_{ processedName }" ) ) {
+                                                AppList [ appID ] .Bools .Add ( $"showapp_{ processedName }", activeCheck .activeSelf );
+                                            }
+                                            bool isVis = AppList [ appID ] .Bools [ $"showapp_{ processedName }" ];
+                                            Hide .mainChannel = isVis ? ThemeChannel .Text : ThemeChannel .System;
+                                            Hide .Retheme ( Theme );
                                             //showInList = Config .Bind ( "Apps", $"Show { processedName }", true, "" ); 
                                             AppName .SetString ( processedName );
                                             
@@ -2034,6 +2221,7 @@ namespace _otAPI {
                                                             hori .SetSiblingIndex ( mainInd - 1 );
                                                             vert .SetSiblingIndex ( mainInd - 1 );
                                                             child .transform .SetSiblingIndex ( child .transform .GetSiblingIndex ( ) - 1 );
+                                                            SetIconOrder ( );
                                                         }
                                                     }
                                                 }
@@ -2052,6 +2240,7 @@ namespace _otAPI {
                                                             hori .SetSiblingIndex ( mainInd + 1 );
                                                             vert .SetSiblingIndex ( mainInd + 1 );
                                                             child .transform .SetSiblingIndex ( child .transform .GetSiblingIndex ( ) + 1 );
+                                                            SetIconOrder ( );
                                                         }
                                                     }
                                                 }
@@ -2065,9 +2254,6 @@ namespace _otAPI {
                                                         GameObject hori = horiButtons .transform .Find ( child .name ) .gameObject;
                                                         GameObject vert = vertButtons .transform .Find ( child .name ) .gameObject;
                                                         if ( main == null || hori == null || vert == null ) return; else {
-                                                            if ( !AppList [ appID ] .Bools .ContainsKey ( $"showapp_{ processedName }" ) ) {
-                                                                AppList [ appID ] .Bools .Add ( $"showapp_{ processedName }", true );
-                                                            }
                                                             bool isVis = AppList [ appID ] .Bools [ $"showapp_{ processedName }" ];
                                                             isVis = !isVis; AppList [ appID ] .Bools [ $"showapp_{ processedName }" ] = isVis;
                                                             Hide .mainChannel = isVis ? ThemeChannel .Text : ThemeChannel .System;
@@ -2076,6 +2262,7 @@ namespace _otAPI {
                                                             main .SetActive ( isVis );
                                                             hori .SetActive ( isVis );
                                                             vert .SetActive ( isVis );
+                                                            SetIconOrder ( );
                                                         }
                                                     }
                                                 }
@@ -2092,6 +2279,7 @@ namespace _otAPI {
                                             0.1f
                                         );
                                         waiter .SetResult ( true );
+                                        _locker .SetResult ( true );
                                     }
                                 )
                             );
@@ -2105,6 +2293,7 @@ namespace _otAPI {
                                 .transform .GetChild ( 0 ) .gameObject
                                 .SetActive ( false );
                             await Task .Delay ( 25 );
+                            locker .SetResult ( true );
                         }
                     }
                 },
@@ -2120,6 +2309,7 @@ namespace _otAPI {
                                 Position = new Vector2 ( 0.17f, 0 ),
                                 Size = new Vector2 ( 0.12f, 0.6f ),
                                 Channel1 = ThemeChannel .Button,
+                                Channel2 = ThemeChannel .Hover,
                                 Radius = 0.6f,
                                 Children = new ( ) {
                                     new ( ) {
@@ -2134,6 +2324,7 @@ namespace _otAPI {
                                 Position = new Vector2 ( 0.5f, 0 ),
                                 Size = new Vector2 ( 0.16f, 0.6f ),
                                 Channel1 = ThemeChannel .Button,
+                                Channel2 = ThemeChannel .Hover,
                                 Radius = 0.6f,
                                 Children = new ( ) {
                                     new ( ) {

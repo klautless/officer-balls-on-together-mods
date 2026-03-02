@@ -84,7 +84,7 @@ namespace _otAPI {
             yield return new WaitForSeconds ( delay );
             action .Invoke ( );
         }
-        public static void CancelJobs ( string DepotFolder ) {
+        internal static void CancelJobs ( string DepotFolder ) {
             if ( AppList [ DepotFolder ] != null )
                 ConstructionQueue .Clear ( );
                 AppList [ DepotFolder ] .cancel ? .Invoke ( );

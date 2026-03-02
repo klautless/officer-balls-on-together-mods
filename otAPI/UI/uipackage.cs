@@ -1,7 +1,7 @@
 using System;
 using System .Collections .Generic;
 using System .Reflection;
-
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine .UI;
 
@@ -20,7 +20,7 @@ namespace _otAPI {
             get => _children ?? [ ];
             set => _children = value;
         }
-        public Action ? PostBuild;
+        public Action < TaskCompletionSource < bool > >? PostBuild;
         private bool ? _mark; public bool Mark {
             get => _mark ?? false;
             set => _mark = value;
@@ -146,6 +146,10 @@ namespace _otAPI {
             get => _startInactive ?? false;
             set => _startInactive = value;
         }
+        private bool ? _buildOffscreen; public bool BuildOffscreen {
+            get => _buildOffscreen ?? false;
+            set => _buildOffscreen = value;
+        }
         private float ? _imgScale; public float ImgScale {
             get => _imgScale ?? 1f;
             set => _imgScale = value;
@@ -190,8 +194,6 @@ namespace _otAPI {
             get => _depotFolder ?? "";
             set => _depotFolder = value;
         }
-
-        
         private bool ? _overrideSize; internal bool overrideSize {
             get => _overrideSize ?? false;
             set => _overrideSize = value;

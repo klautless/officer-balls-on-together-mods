@@ -882,3 +882,134 @@
                 }
             );
             ev .triggers .Add ( clickStart );*/
+
+/*
+
+-------------------------------------------------------------------------------------------
+                    otAPI - accessible backend utilities for developers
+-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-
+//                               officer balls ~feb 2026                                 //
+//                                                                                       //
+//                                                                                       //
+//                              * documentation is WIP *                                 //
+// Parameters throughout documentation are optional if denoted with ** wrapping.         //
+// Methods are given with expected inputs as well as their respective types.             //
+//                                                                                       //
+    * * * * for Alias reference jump to line 34                                           //
+    * * * * for Utility reference jump to line __                                         //
+    * * * * for Class/Enum references jump to line __                                     //
+                                                                                         //
+-----------------------------------------------------------------------------------------//
+                                          TL;DR:                                         //
+-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-//
+//                                                                                       //
+// aliases:                                                                              //
+// - aliases handle method calls with chat messages ie. /help or !help                   //
+// - can verify user's arguments in chat and give feedback if invalid entries            //
+// - can be setup to call your own methods or automated cfg methods                      //
+// - cfg methods link to BepInEx ConfigEntry<> allowing for ez ingame settings changes   //
+// - (cfg) can also be setup with aux to call a method in your own script, too           //
+//                                          (clean-up methods, pre-calls, etc)           //
+//                                                                                       //
+// utility methods:                                                                      //
+// otAPI.Notify( string, *channel* ), otAPI.ValidateHex( string )                        //
+//                                                                                       //
+// classes: Alias, Arg, CfgLink, Depot                                                   //
+// enums: Channel, ArgType, VerificationError, AuxTiming                                 //
+//                                                                                       //
+//---------------------------------------------------------------------------------------//
+//                                primary alias methods:                                 //
+//-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-//
+//                                                                                       //
+//                               Method name: CreateDepot                                //
+//                                 Method type: Aliases                                  //
+//  Use:                                                                                 //
+// CreateDepot(name, description, prefix)                                                //
+// CreateDepot(string, string, string)                                                   //
+//      name: Only letters, spaces, hyphens, and apostrophes allowed. 18 chars max.      //
+//                                                                                       //
+// How-to: Call once and store the object to establish a Depot for your mod's aliases.   //
+// Prefix determines how to call all aliases within the depot,                           //
+// ie. !example in chat vs. /example                                                     //
+//        Think of Depots as folders or subfolders for your mod's linked methods.        //
+//                                                                                       //
+//                                                                                       //
+//      example 1.                                                                       //
+//  Depot MyDepot = otAPI.CreateDepot( "Example Depot", "This mod does example!", "!" ); //
+//                                                                                       //
+//  .|.  |  .|.  |  .|.  |  .|.  |  .|.  |  .|.  |  .|.  |  .|.  |  .|.  |  .|.  |  .|.  //
+//                                                                                       //
+//                                Method name: Register                                  //
+//                                 Method type: Aliases                                  //
+//  Use:                                                                                 //
+// Register( name, description, depot, action, frontEnd, passThrough, args )             //
+// Register( string, string, Depot, Action< string[] >, bool, bool, Arg[] )              //
+//                                                                                       //
+// How-to: Call this to establish aliases within a depot.                                //
+// Best practice is to create a List<Alias> with [ new Alias(), new Alias() ] info,      //
+// and process in a loop.                                                                //
+//                                                                                       //
+//                                                                                       //
+//      example 1.                                                                       //
+//  otAPI.Register( "jetpack", "Summon jetpack!", MyDepot, Jetpack, true, false, null ); //
+//                                                                                       //
+//      - methods should expect a string[] args argument, whether used or not            //
+//      - frontEnd determines if a chat alias is created                                 //
+//            (pre-work for potential menu integrations)                                 //
+//      - passThrough determines if other aliases can exist with the same name,          //
+//                                                    ie. a common /help method          //
+//      - arguments are optional and can be skipped with null                            //
+//                                                                                       //
+//                                                                                       //
+//      example 2.                                                                       //
+//  otAPI.Register( "jetpacksize", "Adjusts your jetpack size.", MyDepot, JetpackSize,   //
+//                  true, false, new Arg[] { new Arg( ArgType.Float, true, 0f, 5f ) } ); //
+//                                                                                       //
+//      - demonstration of a call that accepts an optional float value between 0 and 5.  //
+//                         * view Class/Enum section for more details on construction *  //
+//                                                                                       //
+//  .|.  |  .|.  |  .|.  |  .|.  |  .|.  |  .|.  |  .|.  |  .|.  |  .|.  |  .|.  |  .|.  //
+//                                                                                       //
+//                                 Method name: AddCfg                                   //
+//                                 Method type: Aliases                                  //
+//  Use:                                                                                 //
+// AddCfg( string, string, Depot, Arg[], CfgLink, *Action< string[] >*, *AuxTiming* )    //
+// AddCfg( name, description, depot, args, cfgLink, *auxMethod*, *auxTiming* )           //
+//                                                                                       //
+// How-to: Call this to establish config aliases within a depot.                         //
+// Config aliases route to a preconfigured getter/setter for your ConfigEntries, so      //
+// users can easily change your mod's settings in game with /alias, !alias, etc.         //
+// As before with Register, it's easiest to loop through a List< Alias >, though it is   //
+// advised to use separate lists and loops.                                              //
+//                                                                                       //
+//                                                                                       //
+//      example 1.                                                                       //
+// otAPI.AddCfg( "jetpackcolor", "Changes the jetpack's color.", MyDepot,                //
+//                      new Arg[] { new Arg( ArgType.HexColor, true ) },                 //
+//                      new CfgLink( ArgType.HexColor, cfgJetpackColor ) );              //
+//                                                                                       //
+//      - links an existing ConfigEntry< string > named cfgJetpackColor to a new alias   //
+//                                                         in this case, !jetpackcolor   //
+//      - the Arg's optional bool is set to true, so it can be used as a getter when     //
+//                                                        called without a new color.    //
+//                                                                                       //
+// --------------------------------------------------------------------------------------//
+//                                          UI                                           //
+//-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-//
+//                                                                                       //
+//                                                                                       //
+//                                                                                       //
+// --------------------------------------------------------------------------------------//
+//                               primary utility methods:                                //
+//-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-//
+//                                 Method name: Notify                                   //
+//                                 Method type: Utility                                  //
+//  Use:                                                                                 //
+// Notify( string, *Channel* )                                                           //
+//                                                                                       //
+// How-to: Call this if you want to print notification text.                             //
+//                                                                                       //
+//  otAPI.Notify( "Example!" ); prints a notification in active window vs. global only.  //
+//  otAPI.Notify( "Example!", Channel.Local ); forces a local notification.              //
+//  otAPI.Notify( "Example!", Channel.Global ); forces a global notification.            //
+*/

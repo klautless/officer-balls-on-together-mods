@@ -13,7 +13,6 @@ namespace _otAPI {
             string ShortName,
             string Author,
             string Description,
-            UIPackage ? App,
             string Prefix
         ) {
             if ( !Regex.IsMatch ( Name, @"^[\p{L}\s'-]+$" ) ) {
@@ -32,7 +31,49 @@ namespace _otAPI {
                 Debug.Log ( $"{ errPrefix }Short name must be 15 characters or under." );
                 return null;
             }
-            Depot depot = new Depot( Name, ShortName, Author, Description, App, Prefix );
+            foreach ( Depot D in depots ) {
+                if ( D .name == Name || D .shortName == ShortName ) {
+                    Debug .Log ( $"otAPI: a depot with this name / shortname already exist!" );
+                    return null;
+                }
+            }
+            Depot depot = new Depot( Name, ShortName, Author, Description, Prefix );
+            depots .Add ( depot );
+            Debug .Log ( $"otAPI Depot created: { depot .name }" );
+            return depot;
+        }
+        public static Depot CreateDepot (
+            string Name,
+            string ShortName,
+            string Author,
+            string Description,
+            string Prefix,
+            UIPackage App,
+            UIPackage Icon
+        ) {
+            if ( !Regex.IsMatch ( Name, @"^[\p{L}\s'-]+$" ) ) {
+                Debug .Log ( $"{ errPrefix }Bad Depot name! Only letters, spaces, hyphens, and apostrophes allowed." );
+                return null;
+            }
+            else if ( Name .Length > 18 ) {
+                Debug.Log ( $"{ errPrefix }Depot name too long! Must be 18 characters or under." );
+                return null;
+            }
+            else if ( !Regex .IsMatch ( ShortName, @"^[\p{L}\s'-]+$" ) ) {
+                Debug.Log ( $"{ errPrefix }Bad Short name! Only letters, spaces, hyphens, and apostrophes allowed." );
+                return null;
+            }
+            else if ( ShortName .Length > 15 ) {
+                Debug.Log ( $"{ errPrefix }Short name must be 15 characters or under." );
+                return null;
+            }
+            foreach ( Depot D in depots ) {
+                if ( D .name == Name || D .shortName == ShortName ) {
+                    Debug .Log ( $"otAPI: a depot with this name / shortname already exist!" );
+                    return null;
+                }
+            }
+            Depot depot = new Depot( Name, ShortName, Author, Description, Prefix, App, Icon );
             depots .Add ( depot );
             Debug .Log ( $"otAPI Depot created: { depot .name }" );
             return depot;

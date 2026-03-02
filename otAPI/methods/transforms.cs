@@ -61,8 +61,8 @@ namespace _otAPI {
                 break;
             }
         }
-        public static void SetAnchoredPos (
-            RectTransform Rect,
+        public static void SetAnchoredPos ( // yeah, i know
+            RectTransform Rect,             // hope glues and prayers
             UIPackage Package
         ) {
             RectTransform ParentRect =
@@ -235,7 +235,7 @@ namespace _otAPI {
             pos.x = Mathf .Clamp ( pos .x, min .x + halfSize .x, max .x - halfSize .x );
             pos.y = Mathf .Clamp ( pos .y, min .y + halfSize .y, max .y - halfSize .y );
 
-            Rect.anchoredPosition = pos;
+            Rect.anchoredPosition = Package .BuildOffscreen ? new Vector2 ( 0, 100000f ) : pos;
             }
         }
     }

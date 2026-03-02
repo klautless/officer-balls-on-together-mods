@@ -239,8 +239,7 @@ namespace _otAPI {
         }
         public void Retheme (
             UITheme Theme,
-            bool Recursive = true,
-            string DepotFolder = null
+            bool Recursive = true
         ) {
             if ( SkipRetheme ) return;
             mainColor = Theme .GetChannel ( mainChannel, Theme );

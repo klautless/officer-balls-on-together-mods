@@ -1,140 +1,9 @@
-﻿/*
--------------------------------------------------------------------------------------------
-                    otAPI - accessible backend utilities for developers
--^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-
-//                               officer balls ~feb 2026                                 //
-//                                                                                       //
-//                                                                                       //
-//                              * documentation is WIP *                                 //
-// Parameters throughout documentation are optional if denoted with ** wrapping.         //
-// Methods are given with expected inputs as well as their respective types.             //
-//                                                                                       //
-    * * * * for Alias reference jump to line 34                                           //
-    * * * * for Utility reference jump to line __                                         //
-    * * * * for Class/Enum references jump to line __                                     //
-                                                                                         //
------------------------------------------------------------------------------------------//
-                                          TL;DR:                                         //
--^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-//
-//                                                                                       //
-// aliases:                                                                              //
-// - aliases handle method calls with chat messages ie. /help or !help                   //
-// - can verify user's arguments in chat and give feedback if invalid entries            //
-// - can be setup to call your own methods or automated cfg methods                      //
-// - cfg methods link to BepInEx ConfigEntry<> allowing for ez ingame settings changes   //
-// - (cfg) can also be setup with aux to call a method in your own script, too           //
-//                                          (clean-up methods, pre-calls, etc)           //
-//                                                                                       //
-// utility methods:                                                                      //
-// otAPI.Notify( string, *channel* ), otAPI.ValidateHex( string )                        //
-//                                                                                       //
-// classes: Alias, Arg, CfgLink, Depot                                                   //
-// enums: Channel, ArgType, VerificationError, AuxTiming                                 //
-//                                                                                       //
-//---------------------------------------------------------------------------------------//
-//                                primary alias methods:                                 //
-//-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-//
-//                                                                                       //
-//                               Method name: CreateDepot                                //
-//                                 Method type: Aliases                                  //
-//  Use:                                                                                 //
-// CreateDepot(name, description, prefix)                                                //
-// CreateDepot(string, string, string)                                                   //
-//      name: Only letters, spaces, hyphens, and apostrophes allowed. 18 chars max.      //
-//                                                                                       //
-// How-to: Call once and store the object to establish a Depot for your mod's aliases.   //
-// Prefix determines how to call all aliases within the depot,                           //
-// ie. !example in chat vs. /example                                                     //
-//        Think of Depots as folders or subfolders for your mod's linked methods.        //
-//                                                                                       //
-//                                                                                       //
-//      example 1.                                                                       //
-//  Depot MyDepot = otAPI.CreateDepot( "Example Depot", "This mod does example!", "!" ); //
-//                                                                                       //
-//  .|.  |  .|.  |  .|.  |  .|.  |  .|.  |  .|.  |  .|.  |  .|.  |  .|.  |  .|.  |  .|.  //
-//                                                                                       //
-//                                Method name: Register                                  //
-//                                 Method type: Aliases                                  //
-//  Use:                                                                                 //
-// Register( name, description, depot, action, frontEnd, passThrough, args )             //
-// Register( string, string, Depot, Action< string[] >, bool, bool, Arg[] )              //
-//                                                                                       //
-// How-to: Call this to establish aliases within a depot.                                //
-// Best practice is to create a List<Alias> with [ new Alias(), new Alias() ] info,      //
-// and process in a loop.                                                                //
-//                                                                                       //
-//                                                                                       //
-//      example 1.                                                                       //
-//  otAPI.Register( "jetpack", "Summon jetpack!", MyDepot, Jetpack, true, false, null ); //
-//                                                                                       //
-//      - methods should expect a string[] args argument, whether used or not            //
-//      - frontEnd determines if a chat alias is created                                 //
-//            (pre-work for potential menu integrations)                                 //
-//      - passThrough determines if other aliases can exist with the same name,          //
-//                                                    ie. a common /help method          //
-//      - arguments are optional and can be skipped with null                            //
-//                                                                                       //
-//                                                                                       //
-//      example 2.                                                                       //
-//  otAPI.Register( "jetpacksize", "Adjusts your jetpack size.", MyDepot, JetpackSize,   //
-//                  true, false, new Arg[] { new Arg( ArgType.Float, true, 0f, 5f ) } ); //
-//                                                                                       //
-//      - demonstration of a call that accepts an optional float value between 0 and 5.  //
-//                         * view Class/Enum section for more details on construction *  //
-//                                                                                       //
-//  .|.  |  .|.  |  .|.  |  .|.  |  .|.  |  .|.  |  .|.  |  .|.  |  .|.  |  .|.  |  .|.  //
-//                                                                                       //
-//                                 Method name: AddCfg                                   //
-//                                 Method type: Aliases                                  //
-//  Use:                                                                                 //
-// AddCfg( string, string, Depot, Arg[], CfgLink, *Action< string[] >*, *AuxTiming* )    //
-// AddCfg( name, description, depot, args, cfgLink, *auxMethod*, *auxTiming* )           //
-//                                                                                       //
-// How-to: Call this to establish config aliases within a depot.                         //
-// Config aliases route to a preconfigured getter/setter for your ConfigEntries, so      //
-// users can easily change your mod's settings in game with /alias, !alias, etc.         //
-// As before with Register, it's easiest to loop through a List< Alias >, though it is   //
-// advised to use separate lists and loops.                                              //
-//                                                                                       //
-//                                                                                       //
-//      example 1.                                                                       //
-// otAPI.AddCfg( "jetpackcolor", "Changes the jetpack's color.", MyDepot,                //
-//                      new Arg[] { new Arg( ArgType.HexColor, true ) },                 //
-//                      new CfgLink( ArgType.HexColor, cfgJetpackColor ) );              //
-//                                                                                       //
-//      - links an existing ConfigEntry< string > named cfgJetpackColor to a new alias   //
-//                                                         in this case, !jetpackcolor   //
-//      - the Arg's optional bool is set to true, so it can be used as a getter when     //
-//                                                        called without a new color.    //
-//                                                                                       //
-// --------------------------------------------------------------------------------------//
-//                                          UI                                           //
-//-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-//
-//                                                                                       //
-//                                                                                       //
-//                                                                                       //
-// --------------------------------------------------------------------------------------//
-//                               primary utility methods:                                //
-//-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-//
-//                                 Method name: Notify                                   //
-//                                 Method type: Utility                                  //
-//  Use:                                                                                 //
-// Notify( string, *Channel* )                                                           //
-//                                                                                       //
-// How-to: Call this if you want to print notification text.                             //
-//                                                                                       //
-//  otAPI.Notify( "Example!" ); prints a notification in active window vs. global only.  //
-//  otAPI.Notify( "Example!", Channel.Local ); forces a local notification.              //
-//  otAPI.Notify( "Example!", Channel.Global ); forces a global notification.            //
-    
-*/
-using System;
+﻿using System;
 using System .Collections;
 using System .Collections .Generic;
 using System .IO;
 using System .Linq;
 using System .Reflection;
-using System .Text;
 using System .Text .RegularExpressions;
 
 using BepInEx;
@@ -143,13 +12,8 @@ using HarmonyLib;
 
 using UnityEngine;
 using UnityEngine .EventSystems;
-using UnityEngine .UI;
-using UnityEngine .Localization .Components;
 
-using DG .Tweening;
-using TMPro;
 using PurrNet;
-using System .Threading .Tasks;
 
 namespace _otAPI {
     public enum Channel { Local, Global, Null }
@@ -199,6 +63,7 @@ namespace _otAPI {
         public static Dictionary < string, AppStack > AppList { get; internal set; } = new ( );
         public static GameObject rootHUD { get; internal set; }
         public static UINotificationTray mainTray = null;
+        public static event Action < UITheme > ThemeChange;
         public static AudioSource aus { get; internal set; }
         public static Dictionary < string, AudioClip > ClipPool { get ; internal set ; } = [ ];
         public static bool isDeleting { get; private set; } = false;
@@ -216,12 +81,14 @@ namespace _otAPI {
         public static ConfigEntry < Vector2 > phone_lastPosition { get; internal set; }
         public static ConfigEntry < float > phone_Scale { get; internal set; }
         public static ConfigEntry < Vector2 > notificationtray_lastPosition { get; internal set; }
+        public static ConfigEntry < string > desiredApps { get; internal set; }
         public static ConfigEntry < bool > dev_suppressWarnings { get; internal set; }
 
         internal static bool initialized = false;
         internal static Dictionary <  string , Dictionary < string, Action > > updateCycles = new ( );
          public static Cache < string, Sprite > spriteCache { get; internal set; } = new Cache < string, Sprite > ( 250 );
          public static List < Depot > depots { get; internal set; } = new ( );
+         public static List < UIPackage > appIcons { get; internal set; } = new ( );
         internal static List < string > passthroughs = new ( );
         internal static string loadHelper = "";
         internal static bool sortedYet = false;
@@ -253,7 +120,7 @@ namespace _otAPI {
                     Channel1 = ThemeChannel .Header
                 }
             },
-            PostBuild = ( ) => {
+            PostBuild = ( locker ) => {
                 mainTray .transform .localPosition = notificationtray_lastPosition .Value;
                 MakeGrabber (
                     AppList [ appID ] .Buffer .Get,
@@ -261,6 +128,7 @@ namespace _otAPI {
                     true,
                     ( ) => { notificationtray_lastPosition .Value = mainTray .transform .localPosition; }
                 );
+                locker .SetResult ( true );
             }
         };
         
@@ -290,7 +158,10 @@ namespace _otAPI {
                 "Notifications", "LastPosition", Vector2 .zero,
                 "Memory of the last screen position for the notification tray."
             );
-
+            desiredApps = Config .Bind (
+                "Apps", "DesiredApps", "Button_Pomodoro,Button_TodoList,Button_modPhone,Button_TaskManager,Button_Journal",
+                "Attempts to hide and sort apps."
+            );
             dev_suppressWarnings = Config .Bind (
                 "Dev", "SurpressWarnings", true,
                 "Hides warnings (setting to false while developing is encouraged)"
@@ -380,11 +251,16 @@ namespace _otAPI {
                     if ( depot .app != null) {
                         UIPackage import = ( UIPackage ) depot .app;
                         Dictionary < string, UIPackage > prefabs = new ( );
-                        foreach ( KeyValuePair < string, UIPackage > kv in import .Prefabs ) {
-                            UIPackage _prefab = kv .Value with {
-                                DepotFolder = depot .name
-                            };
-                            prefabs .Add ( kv .Key, _prefab );
+                        if ( depot .UsesApp && depot .UsesIcon ) {
+                            appIcons .Add ( ( UIPackage ) depot .icon );
+                        }
+                        if ( import .Prefabs == null ) { } else {
+                            foreach ( KeyValuePair < string, UIPackage > kv in import .Prefabs ) {
+                                UIPackage _prefab = kv .Value with {
+                                    DepotFolder = depot .name
+                                };
+                                prefabs .Add ( kv .Key, _prefab );
+                            }
                         }
                         if ( import .Prefabs != null )
                             AppList [ depot .name ] .Prefabs = new ( prefabs );
@@ -427,13 +303,91 @@ namespace _otAPI {
                     yield return tray .Current;
                 }
             }
-            initialized = true;
-            Debug .Log ( "otAPI initialization completed." );
-            CoreRoutine = null;
+            RunCoroutine ( CreateAppIcons ( async ( ) => {
+                        if ( !AppList [ appID ] .UI .ContainsKey ( homePage ) ) {
+                            UIPackage HomePage = AppList [ appID ] .Prefabs [ homePage ];
+                            RunCoroutine ( QueueJob ( KeyValuePair .Create ( appID, HomePage ) ) );
+                        }
+                        AttemptIconOrder ( );
+                        AppList [ appID ] .UI [ appID ] .SetActive ( false );
+                        AppList [ appID ] .UI [ appID ] .transform .localPosition = phone_lastPosition .Value;
+                        initialized = true;
+                        Debug .Log ( "otAPI initialization completed." );
+                        CoreRoutine = null;
+
+                    }
+                )
+            );
+        }
+        internal static void SetIconOrder ( ) {
+            GameObject pool = GameObject .Find ( "/Canvas/GameUI/MainUI/Panel_ProductivityButtons" );
+            if ( pool == null ) { Debug .Log ( "no pool!" ); return; }
+            string total = "";
+            int sum = pool .transform .childCount;
+            for ( int c = 0; c < sum; c++ ) {
+                int C = c;
+                GameObject child = pool .transform .GetChild ( C ) .gameObject;
+                if ( child == null ) continue;
+                if ( child .activeSelf ) {
+                    if ( total == "" ) { total += child .name; }
+                    else total += $",{ child .name }";
+                }
+            }
+            desiredApps .Value = total;
+        }
+        internal static void AttemptIconOrder ( ) {
+            GameObject normals = GameObject .Find ( "/Canvas/GameUI/MainUI/Panel_ProductivityButtons" );
+            GameObject horiButtons = Canvas .transform .Find ( "Mask_Horizontal/Panel_ProductivityButtons" ) .gameObject;
+            GameObject vertButtons = Canvas .transform .Find ( "Mask_Vertical/Panel_ProductivityButtons" ) .gameObject;
+            if ( normals == null || horiButtons == null || vertButtons == null ) return;
+            string [ ] _items = desiredApps .Value .Split ( ',', StringSplitOptions .RemoveEmptyEntries );
+            List < string > items = new ( );
+            for ( int x = 0; x < _items .Length; x++ ) {
+                int X = x;
+                Transform exister = normals .transform .Find ( _items [ X ] );
+                if ( exister == null ) { } else {
+                    items .Add ( _items [ X ] );
+                }
+            }
+
+            Transform [ ] T1s = new Transform [ normals .transform .childCount ];
+            Transform [ ] T2s = new Transform [ normals .transform .childCount ];
+            Transform [ ] T3s = new Transform [ normals .transform .childCount ];
+            for ( int c = 0; c < normals .transform .childCount; c++ ) {
+                int C = c;
+                Transform T1 = normals .transform .GetChild ( C );
+                Transform T2 = horiButtons .transform .GetChild ( C );
+                Transform T3 = vertButtons .transform .GetChild ( C );
+                if ( T1 == null || T2 == null || T3 == null ) continue;
+                GameObject G1 = T1 .gameObject;
+                GameObject G2 = T2 .gameObject;
+                GameObject G3 = T3 .gameObject;
+                if ( G1 == null || G2 == null || G3 == null ) continue;
+                if ( !items .Contains ( T1 .name ) ) {
+                    if ( T1 .name != "Button_modPhone" ) {
+                        G1 .SetActive ( false ); 
+                        G2 .SetActive ( false ); 
+                        G3 .SetActive ( false ); 
+                    }
+                } else {
+                    int pos = items .IndexOf ( T1 .name );
+                    T1s [ pos ] = T1;
+                    T2s [ pos ] = T2;
+                    T3s [ pos ] = T3;
+                }
+            }
+            for ( int t = 0; t < T1s .Length; t++ ) {
+                int T = t;
+                if ( T1s [ T ] == null || T2s [ T ] == null || T3s [ T ] == null ) continue;
+                T1s [ T ] .SetSiblingIndex ( T );
+                T2s [ T ] .SetSiblingIndex ( T );
+                T3s [ T ] .SetSiblingIndex ( T );
+            }
         }
         internal static IEnumerator Despawner ( ) {
             initialized = false;
             Canvas = null;
+            appIcons .Clear ( );
             AppList .Clear ( );
             ConstructionQueue .Clear ( );
 
@@ -477,8 +431,6 @@ namespace _otAPI {
                 yield return next . Current;
             }
         }
-        
-        
         
         public static void MakeGrabber (
             GameObject Handle,
@@ -533,6 +485,7 @@ namespace _otAPI {
                 method .Invoke ( Instance, Parameters );
             }
         }
+
         public static void ScrollCheck ( GameObject obj, UIPackage k ) {
             if ( k .ScrollRect != null ) {
                 if ( !obj .TryGetComponent ( typeof ( ScrollForwarder ), out Component _ ) ) {
@@ -650,71 +603,68 @@ namespace _otAPI {
         }
         internal static void ResUp ( ) { if ( Canvas == null ) return; Canvas .scaleFactor += 0.025f; }
         internal static void ResDown ( ) { if ( Canvas == null ) return; Canvas .scaleFactor -= 0.025f; }
-        public static IEnumerator CreateAppIcon (
-            UIPackage IconPackage,
-            IEnumerator postjob = null,
-            Action postaction = null
+        internal static IEnumerator CreateAppIcons (
+            Action postjob = null
         ) {
-            float timeoutLimit = 10f;
-            float timeout = 0;
-            while ( AppList [ IconPackage .DepotFolder ] == null ) {
-                if ( timeout > timeoutLimit ) {
-                    Debug .Log ( $"otAPI: CreateAppIcon couldn't find the app for { IconPackage .DepotFolder } in time. Aborted!" );
-                    yield break;
-                } else {
-                    timeout += Time .deltaTime;
-                }
-                yield return null;
-            }
-            while ( AppList [ IconPackage .DepotFolder ] .UI [ IconPackage .DepotFolder ] == null ) {
-                if ( timeout > timeoutLimit ) {
-                    Debug .Log ( $"otAPI: CreateAppIcon couldn't find the app for { IconPackage .DepotFolder } in time. Aborted!" );
-                    yield break;
-                } else {
-                    timeout += Time .deltaTime;
-                }
-                yield return null;
-            }
-            UIPackage Icon = IconPackage with {
-                ObjectName = $"Button_{ IconPackage .ObjectName }",
-                ImgScale = 70f, // "Canvas/Mask_Horizontal/Panel_ProductivityButtons"
-                Parent = GameObject .Find ( "/Canvas/GameUI/MainUI/Panel_ProductivityButtons" ),
-                PostBuild = ( ) => {
-                    GameObject buffer = AppList [ IconPackage .DepotFolder ] .Buffer .Get;
-                    if ( buffer != null ) {
-                        UIImage img = buffer .GetComponent < UIImage > ( );
-                        img .CreateHoverBehavior ( 1.428f );
-                        AddClickAction ( buffer, ( ) => {
-                                GameObject menu = AppList [ IconPackage .DepotFolder ] .UI [ IconPackage .DepotFolder ];
-                                if ( menu != null ) menu .SetActive ( !menu .activeSelf );
-                                if ( postaction != null ) postaction .Invoke ( );
-                            }
-                        );
+            for ( int p = 0; p < appIcons .Count; p++ ) {
+                int P = p;
+                UIPackage IconPackage = appIcons [ P ];
+                float timeoutLimit = 10f;
+                float timeout = 0;
+                while ( AppList [ IconPackage .DepotFolder ] == null ) {
+                    if ( timeout > timeoutLimit ) {
+                        Debug .Log ( $"otAPI: CreateAppIcon couldn't find the app for { IconPackage .DepotFolder } in time. Aborted!" );
+                        yield break;
+                    } else {
+                        timeout += Time .deltaTime;
                     }
+                    yield return null;
                 }
-            };
-            UIPackage Hori = Icon with {
-                Parent = Canvas .transform .Find ( "Mask_Horizontal/Panel_ProductivityButtons" ) .gameObject,
-                ImgScale = 55f
-            };
-            UIPackage Vert = Icon with {
-                Parent = Canvas .transform .Find ( "Mask_Vertical/Panel_ProductivityButtons" ) .gameObject,
-                ImgScale = 55f
-            };
-            IEnumerator jobs = QueueJobs (
-                KeyValuePair .Create < string, List < UIPackage> > (
-                    IconPackage .DepotFolder, [ Icon, Hori, Vert ]
-                )
-            );
-            while ( jobs .MoveNext ( ) ) {
-                yield return jobs .Current;
-            }
-            if ( postjob != null ) {
-                IEnumerator post = RunCoroutine ( postjob, true );
-                while ( post .MoveNext ( ) ) {
-                    yield return post .Current;
+                while ( AppList [ IconPackage .DepotFolder ] .UI [ IconPackage .DepotFolder ] == null ) {
+                    if ( timeout > timeoutLimit ) {
+                        Debug .Log ( $"otAPI: CreateAppIcon couldn't find the app for { IconPackage .DepotFolder } in time. Aborted!" );
+                        yield break;
+                    } else {
+                        timeout += Time .deltaTime;
+                    }
+                    yield return null;
+                }
+                UIPackage Icon = IconPackage with {
+                    ObjectName = $"Button_{ IconPackage .ObjectName }",
+                    ImgScale = 70f, // "Canvas/Mask_Horizontal/Panel_ProductivityButtons"
+                    Parent = GameObject .Find ( "/Canvas/GameUI/MainUI/Panel_ProductivityButtons" ),
+                    PostBuild = ( locker ) => {
+                        GameObject buffer = AppList [ IconPackage .DepotFolder ] .Buffer .Get;
+                        if ( buffer != null ) {
+                            UIImage img = buffer .GetComponent < UIImage > ( );
+                            img .CreateHoverBehavior ( 1.428f );
+                            AddClickAction ( buffer, ( ) => {
+                                    GameObject menu = AppList [ IconPackage .DepotFolder ] .UI [ IconPackage .DepotFolder ];
+                                    if ( menu != null ) menu .SetActive ( !menu .activeSelf );
+                                }
+                            );
+                        }
+                        locker .SetResult ( true );
+                    }
+                };
+                UIPackage Hori = Icon with {
+                    Parent = Canvas .transform .Find ( "Mask_Horizontal/Panel_ProductivityButtons" ) .gameObject,
+                    ImgScale = 55f
+                };
+                UIPackage Vert = Icon with {
+                    Parent = Canvas .transform .Find ( "Mask_Vertical/Panel_ProductivityButtons" ) .gameObject,
+                    ImgScale = 55f
+                };
+                IEnumerator jobs = QueueJobs (
+                    KeyValuePair .Create < string, List < UIPackage> > (
+                        IconPackage .DepotFolder, [ Icon, Hori, Vert ]
+                    )
+                );
+                while ( jobs .MoveNext ( ) ) {
+                    yield return jobs .Current;
                 }
             }
+            if ( postjob != null ) { postjob .Invoke ( ); }
         }
         
         public static bool ValidateHex (

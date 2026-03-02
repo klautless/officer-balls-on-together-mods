@@ -65,12 +65,11 @@ namespace _otAPI {
 
             ScrollRect .content = ContentRect;
             ScrollRect .viewport = ViewportRect;
-                
-            
+
             ScrollContainer = gameObject;
             Content = content;
             Package .ScrollRect = ScrollRect;
-            //LayoutRebuilder .ForceRebuildLayoutImmediate ( ContentRect );
+            LayoutRebuilder .ForceRebuildLayoutImmediate ( ContentRect );
             if ( Package .Mark & otAPI .AppList .ContainsKey ( Package .DepotFolder ) ) {
                 if ( !otAPI .AppList [ Package .DepotFolder ] .UI .ContainsKey ( Package .ObjectName )
                     | Package .ObjectName == "UI Object"

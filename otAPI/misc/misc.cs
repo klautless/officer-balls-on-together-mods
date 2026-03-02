@@ -22,6 +22,7 @@ namespace _otAPI {
         public Dictionary < string, AsyncAction > Tasks = new ( );
         public Coroutine routine = null; public Action cancel = null;
         public bool isRunning { get; internal set; } = false;
+        public List < TaskCompletionSource < bool > > runners = new ( );
     }
     public class Cache < Token, Contents > {
         private readonly int capacity;

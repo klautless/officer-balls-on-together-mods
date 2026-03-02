@@ -8,6 +8,7 @@ using UnityEngine;
 
 using TMPro;
 using PurrNet;
+using System.Threading.Tasks;
 
 namespace _otAPI {
     public partial class otAPI {
@@ -32,10 +33,17 @@ namespace _otAPI {
                 }
                 if ( job .Value .PostBuild != null ) {
                     yield return null;
+                    TaskCompletionSource < bool > locker = new ( );
+                    bool ran = false;
                     try {
-                        job .Value .PostBuild .Invoke ( );
+                        job .Value .PostBuild .Invoke ( locker );
+                        ran = true;
                     } catch ( Exception ex ) {
                         Debug .Log ( $"otAPI: post build failed for { job .Value .ObjectName } UIPackage / { ex }" );
+                    }
+                    if ( ran ) {
+                        AppList [ job .Key ] .runners .Add ( locker );
+                        yield return new WaitUntil ( ( ) => locker .Task .IsCompleted );
                     }
                 }
                 else yield return null;
@@ -47,7 +55,7 @@ namespace _otAPI {
         }
         public static IEnumerator QueueJob (
             KeyValuePair < string, UIPackage > job,
-            Action PostOrders = null
+            Action < TaskCompletionSource < bool > > PostOrders = null
         ) {
             ConstructionQueue .Enqueue ( job );
 
@@ -61,11 +69,16 @@ namespace _otAPI {
                     yield return ConstructionRoutine .Current;
                 }
             }
-            if ( PostOrders != null ) { PostOrders .Invoke ( ); yield return null; }
+            if ( PostOrders != null && AppList .ContainsKey ( job .Key ) ) {
+                TaskCompletionSource < bool > locker = new ( );
+                AppList [ job .Key ] .runners .Add ( locker );
+                PostOrders .Invoke ( locker );
+                yield return new WaitUntil ( ( ) => locker .Task .IsCompleted );
+            }
         }
         public static IEnumerator QueueJobs (
             KeyValuePair < string, List < UIPackage > > jobs,
-            Action PostOrders = null
+            Action < TaskCompletionSource < bool > > PostOrders = null
         ) {
             foreach ( UIPackage job in jobs .Value ) {
                 ConstructionQueue .Enqueue ( KeyValuePair .Create ( jobs .Key, job ) );
@@ -85,7 +98,12 @@ namespace _otAPI {
                     yield return ConstructionRoutine .Current;
                 }
             }
-            if ( PostOrders != null ) { PostOrders .Invoke ( ); yield return null; }
+            if ( PostOrders != null && AppList .ContainsKey ( jobs .Key ) ) {
+                TaskCompletionSource < bool > locker = new ( );
+                AppList [ jobs .Key ] .runners .Add ( locker );
+                PostOrders .Invoke ( locker );
+                yield return new WaitUntil ( ( ) => locker .Task .IsCompleted );
+            }
         }
         internal static IEnumerator CreateUI ( 
             UIPackage Package,
