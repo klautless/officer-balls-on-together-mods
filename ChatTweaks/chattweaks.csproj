@@ -1,30 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net46</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>officerballs.ChatTweaks</AssemblyName>
-    <Version>1.1.0</Version>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <RootNamespace>ChatTweaks</RootNamespace>
   </PropertyGroup>
+  
+  <Target Name="MoveAssembly" AfterTargets="Build">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ProjectDir)../../On-Together/BepInEx/plugins/officerballs/" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ProjectDir)../Exports" />
+  </Target>
+
   <ItemGroup>
-    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/BepInEx/core/0Harmony.dll" />
-    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/BepInEx/core/BepInEx.dll" />
-    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/BepInEx/plugins/CommandAPI.dll" />
-    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/OnTogether_Data/Managed/Assembly-CSharp.dll" />
-    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/OnTogether_Data/Managed/Assembly-CSharp-firstpass.dll" />
-    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/OnTogether_Data/Managed/DOTween.dll" />
-    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/OnTogether_Data/Managed/netstandard.dll" />
-    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/OnTogether_Data/Managed/PurrNet.Runtime.dll" />
-    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/OnTogether_Data/Managed/PurrNetLobbySetup.dll" />
-    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/OnTogether_Data/Managed/UnityEngine.dll" />
-    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/OnTogether_Data/Managed/Unity.TextMeshPro.dll" />
-    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/OnTogether_Data/Managed/UnityEngine.UI.dll" />
-    <Reference Include="../../../../.local/share/Steam/steamapps/common/On-Together/On-Together/OnTogether_Data/Managed/UnityEngine.CoreModule.dll" />
-    <Content Include="plugin.cs" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
+
+    <EmbeddedResource Include="chatTweaks/**/*" >
+      <LogicalName>$([System.String]::new('%(RelativeDir)').Replace('\','/'))%(FileName)%(Extension)</LogicalName>
+    </EmbeddedResource>
+
+    <Reference Include="Assembly-CSharp">
+      <HintPath>../../On-Together/OnTogether_Data/Managed/Assembly-CSharp.dll</HintPath>
+    </Reference>
+
+    <Reference Include="BepInEx">
+      <HintPath>../../On-Together/BepInEx/core/BepInEx.dll</HintPath>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>../../On-Together/BepInEx/core/0Harmony.dll</HintPath>
+    </Reference>
+    
+    <Reference Include="otAPI">
+      <HintPath>../../On-Together/BepInEx/plugins/otAPI/otAPI.dll</HintPath>
+    </Reference>
+
+    <Reference Include="UnityEngine">
+      <HintPath>../../On-Together/OnTogether_Data/Managed/UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>../../On-Together/OnTogether_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>../../On-Together/OnTogether_Data/Managed/UnityEngine.InputLegacyModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule">
+      <HintPath>../../On-Together/OnTogether_Data/Managed/UnityEngine.ImageConversionModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI.dll">
+      <HintPath>../../On-Together/OnTogether_Data/Managed/UnityEngine.UI.dll</HintPath>
+    </Reference>
+
+    <Reference Include="PurrNet.Runtime">
+      <HintPath>../../On-Together/OnTogether_Data/Managed/PurrNet.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="PurrNetLobbySetup">
+      <HintPath>../../On-Together/OnTogether_Data/Managed/PurrNetLobbySetup.dll</HintPath>
+    </Reference>
+
+    <Reference Include="TextMeshPro">
+      <HintPath>../../On-Together/OnTogether_Data/Managed/Unity.TextMeshPro.dll</HintPath>
+    </Reference>
+    <Reference Include="DOTween">
+      <HintPath>../../On-Together/OnTogether_Data/Managed/DOTween.dll</HintPath>
+    </Reference>
+
   </ItemGroup>
 </Project>
