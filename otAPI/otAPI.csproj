@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>otAPI</AssemblyName>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>_otAPI</RootNamespace>
+  </PropertyGroup>
+  <Target Name="MoveAssembly" AfterTargets="Build">
+    <Copy SourceFiles="$(TargetPath);$(TargetDir)$(TargetName).pdb" DestinationFolder="$(ProjectDir)../../On-Together/BepInEx/plugins/otAPI/" />
+    <Copy SourceFiles="$(TargetPath);$(TargetDir)$(TargetName).pdb" DestinationFolder="$(ProjectDir)../Exports" />
+  </Target>
+  <ItemGroup>
+    <EmbeddedResource Include="otAPI/**/*">
+      <LogicalName>$([System.String]::new('%(RelativeDir)').Replace('\','/'))%(FileName)%(Extension)</LogicalName>
+    </EmbeddedResource>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>../../On-Together/OnTogether_Data/Managed/Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="BepInEx">
+      <HintPath>../../On-Together/BepInEx/core/BepInEx.dll</HintPath>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>../../On-Together/BepInEx/core/0Harmony.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>../../On-Together/OnTogether_Data/Managed/UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Localization">
+      <HintPath>../../On-Together/OnTogether_Data/Managed/Unity.Localization.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.LocalizationModule">
+      <HintPath>../../On-Together/OnTogether_Data/Managed/UnityEngine.LocalizationModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>../../On-Together/OnTogether_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>../../On-Together/OnTogether_Data/Managed/UnityEngine.InputLegacyModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule">
+      <HintPath>../../On-Together/OnTogether_Data/Managed/UnityEngine.ImageConversionModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>../../On-Together/OnTogether_Data/Managed/UnityEngine.TextRenderingModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>../../On-Together/OnTogether_Data/Managed/UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>../../On-Together/OnTogether_Data/Managed/UnityEngine.UIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>../../On-Together/OnTogether_Data/Managed/UnityEngine.AudioModule.dll</HintPath>
+    </Reference>
+    <Reference Include="PurrNet.Runtime">
+      <HintPath>../../On-Together/OnTogether_Data/Managed/PurrNet.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="PurrNetLobbySetup">
+      <HintPath>../../On-Together/OnTogether_Data/Managed/PurrNetLobbySetup.dll</HintPath>
+    </Reference>
+    <Reference Include="TextMeshPro">
+      <HintPath>../../On-Together/OnTogether_Data/Managed/Unity.TextMeshPro.dll</HintPath>
+    </Reference>
+    <Reference Include="DOTween">
+      <HintPath>../../On-Together/OnTogether_Data/Managed/DOTween.dll</HintPath>
+    </Reference>
+    <Content Include="otAPI.cs" />
+  </ItemGroup>
+</Project>
