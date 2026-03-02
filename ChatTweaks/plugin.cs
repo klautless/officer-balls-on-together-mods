@@ -91,11 +91,6 @@ namespace ChatTweaks {
             "A group of tools to modify the chatbox.",
             "/"
         );
-
-        internal static void SyncColorString(string[] args)
-        { /*otAPI.systemcolor = "<#" + configSystemColorWrap.Value + ">";*/ }
-        internal static void SyncSizeString( string[] args)
-        { /*otAPI.sizestring = "<size=" + configTextSize.Value + ">";*/ }
         internal static void OutlineChanger(string[] args)
         {
             var fieldref = AccessTools.FieldRefAccess<UIManager, TextMeshProUGUI>("_messageTextForFont");
@@ -229,12 +224,10 @@ namespace ChatTweaks {
                 OutlineChanger, AuxTiming.During ),
             new Alias( "System Color", chatTweaksDepot, "Sets the color for system messages.",
                 new Arg[] { new Arg( ArgType.HexColor, true ) },
-                new CfgLink(ArgType.HexColor, configSystemColorWrap ),
-                SyncColorString, AuxTiming.During ),
+                new CfgLink(ArgType.HexColor, configSystemColorWrap ) ),
             new Alias( "Text Size", chatTweaksDepot, "Sets the size for chat text.",
                 new Arg[] { new Arg(ArgType.Int, true, 0, 255)},
-                new CfgLink(ArgType.Int, configTextSize ),
-                SyncSizeString, AuxTiming.During )
+                new CfgLink(ArgType.Int, configTextSize ) )
                 
             ];
             
