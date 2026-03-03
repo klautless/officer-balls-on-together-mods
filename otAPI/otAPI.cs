@@ -53,13 +53,13 @@ namespace _otAPI {
     public partial class otAPI : BaseUnityPlugin {
         public const string modGUID = "ob.otAPI";
         public const string modName = "otAPI";
-        public const string modVersion = "1.0.0.0";
+        public const string modVersion = "1.0.2.0";
         private const string errPrefix = "otAPI error: ";
         private Harmony harmony = new Harmony( modGUID );
 
         public static Canvas Canvas { get; internal set; }
         public static float ScaleFactor { get; internal set; }
-        public static List < UITheme > themes { get; internal set; }
+        public static List < UITheme > themes { get; internal set; } = new ( );
         public static UITheme Theme { get; internal set; }
         public static Dictionary < string, AppStack > AppList { get; internal set; } = new ( );
         public static GameObject rootHUD { get; internal set; }

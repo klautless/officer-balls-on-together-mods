@@ -1233,6 +1233,7 @@ namespace _otAPI {
                             if ( VLG == null ) return; else {
                                 VLG .childForceExpandWidth = false;
                                 VLG .childForceExpandHeight = false;
+                                VLG .spacing = 16;
                                 VLG .childAlignment = TextAnchor .MiddleCenter;
                             }
                             UIPackage DL = AppList [ appID ] .Prefabs [ "Depot Menu Label" ] with {
@@ -1286,13 +1287,28 @@ namespace _otAPI {
                                         );
                                     }
                                 };
-                                _build [ _build .Count - 1 ] = _DL;
-                                UIPackage __DL = _build [ _build .Count - 1 ] .Children [ 0 ] with {
-                                    String = $"<align=center>{ depot .name }",
+                                _build [ _index ] = _DL;
+                                /*UIPackage __DL = _build [ _index ] .Children [ 0 ] with {
+                                    String = $"<align=center>{ dname }",
                                 };
-                                _build [ _build .Count - 1 ] .Children [ 0 ] = __DL; 
+                                _build [ _index ] .Children [ 0 ] = __DL;*/
                             }
                             RunCoroutine ( QueueJobs ( KeyValuePair .Create (  appID, _build ), ( _locker ) => {
+                                        Transform DLT = AppList [ appID ] .UI [ "Depot List" ] .transform;
+                                        if ( DLT .childCount > 0 ) {
+                                            for ( int c = 0; c < DLT .childCount; c++ ) {
+                                                int C = c;
+                                                Transform child = DLT .GetChild ( C );
+                                                if ( child == null ) { } else {
+                                                    if ( child .childCount > 0 ) {
+                                                        UIText label = child .GetChild ( 0 ) .GetComponent < UIText > ( );
+                                                        if ( label == null ) { } else {
+                                                            label .SetString ( $"<align=center>{ depots [ C ] .name }" );
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
                                         waiter .SetResult ( true );
                                         _locker .SetResult ( true );
                                     } 
