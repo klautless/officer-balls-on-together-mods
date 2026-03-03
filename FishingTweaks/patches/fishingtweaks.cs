@@ -171,7 +171,7 @@ namespace FishingTweaks.patches
         [HarmonyPrefix]
         public static void Resizer( ref CaughtFish caughtFish )
         {
-            if (Plugin.configHideAnnoyingCatches.Value)
+            if (Plugin .configHideOversizedCatches.Value )
             {
                 switch (caughtFish.Source)
                 {
@@ -355,121 +355,6 @@ namespace FishingTweaks.patches
             MonoSingleton<PomodoroController>.I.PomodoroType == PomodoroType.Study &&
             !MonoSingleton<PomodoroController>.I.IsPaused ) || Plugin.configMuteMinigame.Value ) return false;
             else return true;
-        }
-    }
-    [HarmonyPatch(typeof(TextChannelManager))]
-    public static class AddCommands
-    {
-        [HarmonyPatch("OnEnterPressed")]
-        [HarmonyPrefix]
-        public static bool TextChecker()
-        {    
-            string text = MonoSingleton<UIManager>.I.MessageInput.text;
-            if (text == "/help")
-            {
-                FinishCmds(false);
-                Notify("/help fish for FishingTweaks commands");
-                return true;
-            }
-            if (text.ToLower() == "/help fish" || text.ToLower() == "/help fishingtweaks")
-            {
-                Notify("Available commands:");
-                Notify("/autocatch");
-                Notify("/autorecast");
-                Notify("/infinitebait");
-                Notify("/mutefishing");
-                Notify("/muteminigame");
-                Notify("/mutefishduringtimer");
-                Notify("/forcenormalsizes");
-                FinishCmds();
-                return false;
-            }
-            if (text.ToLower() == "/forcenormalsizes")
-            {
-                Plugin.configHideAnnoyingCatches.Value = !Plugin.configHideAnnoyingCatches.Value;
-                string isMuted = Plugin.configHideAnnoyingCatches.Value ? "on" : "off";
-                Notify("Fish size enforcement turned " + isMuted + ".");
-                FinishCmds();
-                return false;
-            }
-            if (text.ToLower() == "/mutefishing")
-            {
-                Plugin.configMuteFishing.Value = !Plugin.configMuteFishing.Value;
-                string isMuted = Plugin.configMuteFishing.Value ? "muted" : "unmuted";
-                Notify("Fishing " + isMuted + ".");
-                FinishCmds();
-                return false;
-            }
-            if (text.ToLower() == "/muteminigame")
-            {
-                Plugin.configMuteMinigame.Value = !Plugin.configMuteMinigame.Value;
-                string isMuted = Plugin.configMuteMinigame.Value ? "muted" : "unmuted";
-                Notify("Fishing minigame " + isMuted + ".");
-                FinishCmds();
-                return false;
-            }
-            if (text.ToLower() == "/mutefishduringtimer")
-            {
-                Plugin.configMuteFishingDuringFocus.Value = !Plugin.configMuteFishingDuringFocus.Value;
-                string isMuted = Plugin.configMuteFishingDuringFocus.Value ? "enabled" : "disabled";
-                Notify("Mute fishing during timer " + isMuted + ".");
-                FinishCmds();
-                return false;
-            }
-            if (text.ToLower() == "/autocatch")
-            {
-                Plugin.configAutoCatch.Value = !Plugin.configAutoCatch.Value;
-                string isMuted = Plugin.configAutoCatch.Value ? "enabled" : "disabled";
-                Notify("Auto-catch " + isMuted + ".");
-                FinishCmds();
-                return false;
-            }
-            if (text.ToLower() == "/autorecast")
-            {
-                Plugin.configAutoRecast.Value = !Plugin.configAutoRecast.Value;
-                string isMuted = Plugin.configAutoRecast.Value ? "enabled" : "disabled";
-                Notify("Auto-recast " + isMuted + ".");
-                FinishCmds();
-                return false;
-            }
-            if (text.ToLower() == "/infinitebait")
-            {
-                Plugin.configInfiniteBait.Value = !Plugin.configInfiniteBait.Value;
-                string isMuted = Plugin.configInfiniteBait.Value ? "enabled" : "disabled";
-                Notify("Infinite bait " + isMuted + ".");
-                FinishCmds();
-                if (Plugin.configInfiniteBait.Value)
-                {
-                    var _baitCountsField = AccessTools.FieldRefAccess<FishingManager, List<int>>("_baitCounts");
-                    var fishingMgr = MonoSingleton<FishingManager>.I;
-                    var _baitCounts = _baitCountsField(fishingMgr);
-                    for (int bait = 0; bait < _baitCounts.Count; bait++)
-                    {
-                        _baitCounts[bait] = 40;
-                    }
-                    MonoSingleton<DataManager>.I.PlayerDataZip.BaitCounts = _baitCounts;
-                    MonoSingleton<DataManager>.I.SavePlayerZipData();
-                }
-                return false;
-            }
-            return true;
-        }
-
-        public static void FinishCmds(bool clearText=true)
-        {
-            MonoSingleton<TaskManager>.I.SetLockState(NetworkSingleton<MusicManager>.I.IsActive ? LockState.Music : LockState.Free);
-            EventSystem.current.SetSelectedGameObject(null);
-            if (clearText) MonoSingleton<UIManager>.I.MessageInput.text = "";
-        }
-        public static void Notify(string text) { NetworkSingleton<TextChannelManager>.I.AddNotification(text); }
-
-        [HarmonyPatch("SendMessageAsync")]
-        [HarmonyPrefix]
-        public static bool HelpCloser(byte[] textBytes)
-        {
-            string text = Encoding.Unicode.GetString(textBytes);
-            if(text == "/help") return false;
-            return true;
         }
     }
 }
